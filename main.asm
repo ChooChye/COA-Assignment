@@ -29,6 +29,12 @@ INCLUDE Irvine32.inc
 	staffID			DWORD 1209
 	staffPassword	DWORD 12341234
 
+	loginInputStaffID	DWORD ?
+	loginInputStaffPass	DWORD ?
+
+	loginErrorText	BYTE "Staff ID does not exist, Please try again"
+	loginSuccessText BYTE "Login Successfully"
+
 	errorCount		DWORD 0
 
 ;-------------------------------------------------------------------------------------------------;
@@ -96,12 +102,27 @@ _login:
 	mov edx, offset loginBanner1
 	call WriteString
 	call ReadInt
-	mov staffID, eax
+	mov loginInputStaffID, eax
+	
+	.if loginInputStaffID == 1209
+		mov edx, offset loginBanner2
+		call WriteString
+		call ReadInt
+		mov loginInputStaffPass, eax
+		.if loginInputStaffPass == 12341234
+			mov edx, offset loginSuccessText
+			call WriteString
+			call Crlf
 
-	.if staffID == 1
-		mov edx, offset staffName
+		JMP _displayFoodMenu
+		.endif
+	.else
+		mov edx, offset loginErrorText
 		call WriteString
 		call Crlf
+		call Crlf
+		call Crlf
+		loop _login
 	.endif
 
 _mainMenu:
@@ -110,6 +131,47 @@ _mainMenu:
 
 ;-------------------------------------------------------------------------------------------------;
 ;------------------------------------End Login Module ------------------------------------------;
+;-------------------------------------------------------------------------------------------------;
+
+
+;-------------------------------------------------------------------------------------------------;
+;------------------------------------------Start FoodMenu ---------------------------------------;
+;-------------------------------------------------------------------------------------------------;
+
+_displayFoodMenu :
+		mov edx,OFFSET checkoutBanner1
+		call WriteString
+		call Crlf
+		mov edx,OFFSET checkoutBanner2
+		call WriteString
+		call Crlf
+		mov edx,OFFSET checkoutBanner3
+		call WriteString
+		call Crlf
+		mov edx,OFFSET checkoutBanner4
+		call WriteString
+		call Crlf
+		mov edx,OFFSET checkoutBanner5
+		call WriteString
+		call Crlf
+		mov edx,OFFSET checkoutBanner6
+		call WriteString
+		call Crlf
+		mov edx,OFFSET checkoutBanner7
+		call WriteString
+		call Crlf
+
+_getChoice:
+		mov edx, offset checkoutChoice						;Output Text and receive input from user
+		call WriteString
+		call ReadInt
+
+		mov selectedChoice, eax
+
+		
+
+;-------------------------------------------------------------------------------------------------;
+;--------------------------------------------END FoodMenu ---------------------------------------;
 ;-------------------------------------------------------------------------------------------------;
 
 
