@@ -10,11 +10,13 @@
 ExitProcess PROTO, dwExitCode: DWORD		; Standard exit procedure
 
 INCLUDE Irvine32.inc
+INCLUDE Macros.inc
 
 ;------------------------------------Data Segment-------------------------------------;
 .data		;defines the start of the data segment
 	;define variables here
-
+	 
+	invalidInput		BYTE " =====  INVALID INPUT =====",0
 ;-------------------------------------------------------------------------------------------------;
 ;------------------------------------START Data for Login Module -------------------------------------;
 ;-------------------------------------------------------------------------------------------------;
@@ -47,10 +49,11 @@ INCLUDE Irvine32.inc
 ;-------------------------------------------------------------------------------------------------;
 
 
-	mmBanner1		BYTE "==========================MAIN MENU===============================",0
-	mmBanner2		BYTE "1. Checkout",0
-	mmBanner3		BYTE "2. Manage Stock",0
-	mmBanner4		BYTE "3. Logout",0
+	mmBanner1		BYTE "==========================MAIN MENU===============================",0dh,0ah
+					BYTE "1. Checkout",0dh,0ah
+					BYTE "2. Manage Stock",0dh,0ah
+					BYTE "3. Logout",0dh,0ah
+					BYTE "Please select an option: ",0
 
 	mmChoice		DWORD ?
 
@@ -65,30 +68,39 @@ INCLUDE Irvine32.inc
 
 
 
-	checkoutBanner1 BYTE "==========================FOOD MENU===============================",0
-	checkoutBanner2 BYTE "1. Food 1",0
-	checkoutBanner3 BYTE "2. Food 2",0
-	checkoutBanner4 BYTE "3. Food 3",0
-	checkoutBanner5 BYTE "4. Food 4",0
-	checkoutBanner6 BYTE "5. Food 5",0
-	checkoutBanner7 BYTE "==========================FOOD MENU===============================",0
-	checkoutChoice	BYTE "Please select which food : ", 0
+	checkoutBanner1 BYTE "==========================FOOD MENU===============================",0dh,0ah
+					BYTE "1. Nasi Lemak			- RM5",0dh,0ah
+					BYTE "2. Nasi Goreng			- RM7",0dh,0ah
+					BYTE "3. Mee Goreng			- RM6",0dh,0ah
+					BYTE "4. Chicken Rice			- RM8",0dh,0ah
+					BYTE "5. Wantan Mee			- RM7",0dh,0ah
+					BYTE "==========================FOOD MENU===============================",0dh,0ah,0
+	checkoutChoice	BYTE "Please select which food or 0 to stop: ", 0
+
+	txtSubTotal		byte "The sub-total is : RM",0
 
 	selectedChoice DWORD ?
+	selectedChoice2 DWORD ?
+
+	foodprices		dword 5,7,6,8,7
+	foodSelected	dword 0,0,0,0,0
+
+	foodPrice1		dword 5
+	foodPrice2		dword 7
+	foodPrice3		dword 6
+	foodPrice4		dword 8
+	foodPrice5		dword 7
+	foodSum			dword 0
 
 ;-------------------------------------------------------------------------------------------------;
 ;------------------------------------END Data for FoodMenu ---------------------------------------;
 ;-------------------------------------------------------------------------------------------------;
 
 
-
-
-
 ;------------------------------------Code Segment-------------------------------------;
 .code			;defines the code segment(instructions, codes) 
 	main PROC		; Main Driver
 	;write assembly code here
-
 
 ;-------------------------------------------------------------------------------------------------;
 ;------------------------------------Start Login Module ------------------------------------------;
@@ -111,7 +123,7 @@ _login:
 		call WriteString
 		call ReadInt
 		mov loginInputStaffPass, eax
-		.if loginInputStaffPass == 12341234
+		.if loginInputStaffPass == 1234
 			JMP _displayMainMenu			;Login successful
 		.else
 			call Clrscr
@@ -142,15 +154,17 @@ _displayMainMenu:
 	mov edx, offset mmBanner1
 	call WriteString
 	call Crlf
-	mov edx, offset mmBanner2
+	
+	mov edx, offset selectedChoice						;Output Text and receive input from user
 	call WriteString
-	call Crlf
-	mov edx, offset mmBanner3
-	call WriteString
-	call Crlf
-	mov edx, offset mmBanner4
-	call WriteString
-	call Crlf
+	call ReadInt
+
+	.if selectedChoice == 1
+		JMP _displayFoodMenu
+
+
+	.endif
+
 
 ;-------------------------------------------------------------------------------------------------;
 ;------------------------------------------END MainMenu ---------------------------------------;
@@ -162,27 +176,11 @@ _displayMainMenu:
 ;-------------------------------------------------------------------------------------------------;
 
 _displayFoodMenu :
+		call Clrscr
 		mov edx,OFFSET checkoutBanner1
 		call WriteString
 		call Crlf
-		mov edx,OFFSET checkoutBanner2
-		call WriteString
-		call Crlf
-		mov edx,OFFSET checkoutBanner3
-		call WriteString
-		call Crlf
-		mov edx,OFFSET checkoutBanner4
-		call WriteString
-		call Crlf
-		mov edx,OFFSET checkoutBanner5
-		call WriteString
-		call Crlf
-		mov edx,OFFSET checkoutBanner6
-		call WriteString
-		call Crlf
-		mov edx,OFFSET checkoutBanner7
-		call WriteString
-		call Crlf
+		
 
 _getChoice:
 		mov edx, offset checkoutChoice						;Output Text and receive input from user
@@ -191,7 +189,81 @@ _getChoice:
 
 		mov selectedChoice, eax
 
-		
+		mov ecx, lengthof foodSelected
+
+		.if selectedChoice == 1
+			;Increment quantity
+			mov esi, 0
+			add foodSelected[esi], 1
+			mov eax, foodSelected[esi]
+
+			call WriteDec
+			call Crlf
+			loop _getChoice
+		.elseif selectedChoice == 2
+			mov esi, 1
+			add foodSelected[esi], 1
+			mov eax, foodSelected[esi]
+
+			call WriteDec
+			call Crlf
+			loop _getChoice
+		.elseif selectedChoice == 3
+			mov esi, 2
+			add foodSelected[esi], 1
+			mov eax, foodSelected[esi]
+
+			call WriteDec
+			call Crlf
+			dec cx
+			jne _getChoice
+		.elseif selectedChoice == 4
+			mov esi, 3
+			add foodSelected[esi], 1
+			mov eax, foodSelected[esi]
+
+			call WriteDec
+			call Crlf
+			dec cx
+			jne _getChoice
+		.elseif selectedChoice == 5
+			mov esi, 4
+			add foodSelected[esi], 1
+			mov eax, foodSelected[esi]
+
+			call WriteDec
+			call Crlf
+			dec cx
+			jne _getChoice
+		.elseif selectedChoice == 0			
+			
+			mov esi, 0						; Point to element 0
+			XOR EAX, EAX
+
+			MULTIPLY:
+				mov eax, foodSelected[esi]		; Move quantity from index 0
+				mov ebx, foodPrices[esi]		; Move price from element 0 => 5
+				mul ebx							; Multiply
+			
+			add foodSum, eax				; Move multiplied value to sum
+			add esi, type foodSelected
+				
+
+			mov eax, foodSum				
+			
+			call WriteDec
+			;;mov edx, offset txtSubTotal		;Output Total Price
+			;;call WriteString
+			;;mov eax, foodSum
+			;;call WriteDec
+			;;call Crlf
+		.else
+			call Crlf
+			mov edx, offset invalidInput
+			call WriteString
+		.endif
+
+	
 
 ;-------------------------------------------------------------------------------------------------;
 ;--------------------------------------------END FoodMenu ---------------------------------------;
