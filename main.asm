@@ -77,6 +77,7 @@ INCLUDE Macros.inc
 					BYTE "==========================FOOD MENU===============================",0dh,0ah,0
 	checkoutChoice	BYTE "Please select which food or 0 to stop: ", 0
 
+	txtFoodSelected byte "==============Food Selected=============",0dh,0ah,0
 	txtSubTotal		byte "The sub-total is : RM",0
 
 	selectedChoice DWORD ?
@@ -92,11 +93,11 @@ INCLUDE Macros.inc
 	foodPrice5		dword 7
 	foodSum			dword 0
 
-	foodx1			byte " x Nasi Lemak",0
-	foodx2			byte " x Nasi Goreng",0
-	foodx3			byte " x Mee Goreng",0
-	foodx4			byte " x Chicken Rice",0
-	foodx5			byte " x Wantan Mee",0
+	foodx1			byte " x Nasi Lemak		- RM5",0
+	foodx2			byte " x Nasi Goreng		- RM7",0
+	foodx3			byte " x Mee Goreng		- RM6",0
+	foodx4			byte " x Chicken Rice		RM8",0
+	foodx5			byte " x Wantan Mee		- RM7",0
 
 ;-------------------------------------------------------------------------------------------------;
 ;------------------------------------END Data for FoodMenu ---------------------------------------;
@@ -260,6 +261,57 @@ _getChoice:
 			jne _getChoice
 
 		.elseif selectedChoice == 0
+		call Clrscr
+		mov edx, offset txtFoodSelected
+		call WriteString
+		call Crlf
+
+		mov ecx, lengthof foodPrices
+		mov esi, 0						; Point to element 0
+		XOR EAX, EAX					; clear EAX value
+
+		displayFoodSelected:
+
+			mov eax, foodSelected[0]
+			.if eax > 0
+				call WriteDec
+				mov edx, offset foodx1
+				call WriteString
+				call Crlf
+			.endif
+
+			mov eax, foodSelected[4]
+			.if eax > 0
+				call WriteDec
+				mov edx, offset foodx2
+				call WriteString
+				call Crlf
+			.endif
+
+			mov eax, foodSelected[8]
+			.if eax > 0
+				call WriteDec
+				mov edx, offset foodx3
+				call WriteString
+				call Crlf
+			.endif
+
+			mov eax, foodSelected[12]
+			.if eax > 0
+				call WriteDec
+				mov edx, offset foodx4
+				call WriteString
+				call Crlf
+			.endif
+
+			mov eax, foodSelected[16]
+			.if eax > 0
+				call WriteDec
+				mov edx, offset foodx5
+				call WriteString
+				call Crlf
+			.endif
+
 			mov ecx, lengthof foodPrices
 			mov esi, 0						; Point to element 0
 			XOR EAX, EAX					; clear EAX value
@@ -273,6 +325,7 @@ _getChoice:
 				loop sum
 
 			mov edx, offset txtSubTotal
+			call Crlf
 			call WriteString
 			mov eax, foodSum
 			call WriteDec
