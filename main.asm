@@ -82,8 +82,8 @@ INCLUDE Macros.inc
 	selectedChoice DWORD ?
 	selectedChoice2 DWORD ?
 
-	foodprices		dword 5,7,6,8,7
-	foodSelected	dword 0,0,0,0,0
+	foodPrices		dword 5,7,6,8,7
+	foodSelected	dword lengthof foodPrices DUP (0)
 
 	foodPrice1		dword 5
 	foodPrice2		dword 7
@@ -91,6 +91,12 @@ INCLUDE Macros.inc
 	foodPrice4		dword 8
 	foodPrice5		dword 7
 	foodSum			dword 0
+
+	foodx1			byte " x Nasi Lemak",0
+	foodx2			byte " x Nasi Goreng",0
+	foodx3			byte " x Mee Goreng",0
+	foodx4			byte " x Chicken Rice",0
+	foodx5			byte " x Wantan Mee",0
 
 ;-------------------------------------------------------------------------------------------------;
 ;------------------------------------END Data for FoodMenu ---------------------------------------;
@@ -190,6 +196,7 @@ _getChoice:
 		mov selectedChoice, eax
 
 		mov ecx, lengthof foodSelected
+		
 
 		.if selectedChoice == 1
 			;Increment quantity
@@ -198,65 +205,79 @@ _getChoice:
 			mov eax, foodSelected[esi]
 
 			call WriteDec
+			mov edx, offset foodx1
+			call WriteString
+			call Crlf
 			call Crlf
 			loop _getChoice
 		.elseif selectedChoice == 2
-			mov esi, 1
-			add foodSelected[esi], 1
-			mov eax, foodSelected[esi]
-
-			call WriteDec
-			call Crlf
-			loop _getChoice
-		.elseif selectedChoice == 3
-			mov esi, 2
-			add foodSelected[esi], 1
-			mov eax, foodSelected[esi]
-
-			call WriteDec
-			call Crlf
-			dec cx
-			jne _getChoice
-		.elseif selectedChoice == 4
-			mov esi, 3
-			add foodSelected[esi], 1
-			mov eax, foodSelected[esi]
-
-			call WriteDec
-			call Crlf
-			dec cx
-			jne _getChoice
-		.elseif selectedChoice == 5
 			mov esi, 4
 			add foodSelected[esi], 1
 			mov eax, foodSelected[esi]
 
 			call WriteDec
+			mov edx, offset foodx2
+			call WriteString
+			call Crlf
 			call Crlf
 			dec cx
 			jne _getChoice
-		.elseif selectedChoice == 0			
-			
-			mov esi, 0						; Point to element 0
-			XOR EAX, EAX
+		.elseif selectedChoice == 3
+			mov esi, 8
+			add foodSelected[esi], 1
+			mov eax, foodSelected[esi]
 
-			MULTIPLY:
+			call WriteDec
+			mov edx, offset foodx3
+			call WriteString
+			call Crlf
+			call Crlf
+			dec cx
+			jne _getChoice
+		.elseif selectedChoice == 4
+			mov esi, 12
+			add foodSelected[esi], 1
+			mov eax, foodSelected[esi]
+
+			call WriteDec
+			mov edx, offset foodx4
+			call WriteString
+			call Crlf
+			call Crlf
+			dec cx
+			jne _getChoice
+		.elseif selectedChoice == 5
+			mov esi, 16
+			add foodSelected[esi], 1
+			mov eax, foodSelected[esi]
+
+			call WriteDec
+			mov edx, offset foodx5
+			call WriteString
+			call Crlf
+			call Crlf
+			dec cx
+			jne _getChoice
+
+		.elseif selectedChoice == 0
+			mov ecx, lengthof foodPrices
+			mov esi, 0						; Point to element 0
+			XOR EAX, EAX					; clear EAX value
+
+			sum:
 				mov eax, foodSelected[esi]		; Move quantity from index 0
 				mov ebx, foodPrices[esi]		; Move price from element 0 => 5
 				mul ebx							; Multiply
-			
-			add foodSum, eax				; Move multiplied value to sum
-			add esi, type foodSelected
-				
+				add foodSum, eax				; add the sum value to variable foodSum
+				add esi, type foodSelected		; increase esi
+				loop sum
 
-			mov eax, foodSum				
-			
+			mov edx, offset txtSubTotal
+			call WriteString
+			mov eax, foodSum
 			call WriteDec
-			;;mov edx, offset txtSubTotal		;Output Total Price
-			;;call WriteString
-			;;mov eax, foodSum
-			;;call WriteDec
-			;;call Crlf
+			call Crlf
+			
 		.else
 			call Crlf
 			mov edx, offset invalidInput
