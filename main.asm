@@ -78,13 +78,16 @@ INCLUDE Macros.inc
 	checkoutChoice	BYTE "Please select which food or 0 to stop: ", 0
 
 	txtFoodSelected byte "==============Food Selected=============",0dh,0ah,0
-	txtSubTotal		byte "The sub-total is : RM",0
+	txtSubTotal		byte "The sub-total is :	RM",0
+	txtSST			byte "		  SST (6%) :	RM",0
 
 	selectedChoice DWORD ?
 	selectedChoice2 DWORD ?
 
 	foodPrices		dword 5,7,6,8,7
 	foodSelected	dword lengthof foodPrices DUP (0)
+
+		
 
 	foodPrice1		dword 5
 	foodPrice2		dword 7
@@ -98,6 +101,7 @@ INCLUDE Macros.inc
 	foodx3			byte " x Mee Goreng		- RM6",0
 	foodx4			byte " x Chicken Rice		RM8",0
 	foodx5			byte " x Wantan Mee		- RM7",0
+	
 
 ;-------------------------------------------------------------------------------------------------;
 ;------------------------------------END Data for FoodMenu ---------------------------------------;
@@ -204,7 +208,7 @@ _getChoice:
 			mov esi, 0
 			add foodSelected[esi], 1
 			mov eax, foodSelected[esi]
-
+			
 			call WriteDec
 			mov edx, offset foodx1
 			call WriteString
@@ -323,13 +327,14 @@ _getChoice:
 				add foodSum, eax				; add the sum value to variable foodSum
 				add esi, type foodSelected		; increase esi
 				loop sum
-
+				
 			mov edx, offset txtSubTotal
 			call Crlf
 			call WriteString
 			mov eax, foodSum
 			call WriteDec
 			call Crlf
+
 			
 		.else
 			call Crlf
