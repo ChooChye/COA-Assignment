@@ -326,7 +326,7 @@ _getChoice:
 				mul ebx							; Multiply
 				add foodSum, eax				; add the sum value to variable foodSum
 				add esi, type foodSelected		; increase esi
-				loop sum
+				loop sum						; loop sum
 				
 			mov edx, offset txtSubTotal
 			call Crlf
