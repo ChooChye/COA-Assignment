@@ -184,6 +184,9 @@ _displayMainMenu:
 	.if selectedChoice == 1
 		JMP _displayFoodMenu
 
+	;.elseif selectedChoice == 2
+	;	include		manage_stock.asm
+
 
 	.endif
 
