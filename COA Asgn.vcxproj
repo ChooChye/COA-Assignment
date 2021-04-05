@@ -99,11 +99,11 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\Users\User\Desktop\Y3S2\COA\irvine;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\irvine;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>Irvine32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <MASM>
-      <IncludePaths>C:\Users\User\Desktop\Y3S2\COA\irvine;%(IncludePaths)</IncludePaths>
+      <IncludePaths>C:\irvine;%(IncludePaths)</IncludePaths>
     </MASM>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
