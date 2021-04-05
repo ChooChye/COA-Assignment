@@ -17,6 +17,12 @@ INCLUDE Macros.inc
 	;define variables here
 	 
 	invalidInput		BYTE " =====  INVALID INPUT =====",0
+	seperator			byte "=======================================",0
+	fullStop			byte ".", 0
+	percent				dword 100
+	thousand			dword 1000
+	quotient			dword ?
+	remainder			dword ?
 ;-------------------------------------------------------------------------------------------------;
 ;------------------------------------START Data for Login Module -------------------------------------;
 ;-------------------------------------------------------------------------------------------------;
@@ -67,40 +73,45 @@ INCLUDE Macros.inc
 ;-------------------------------------------------------------------------------------------------;
 
 
-
+	invalidVoucher	byte "Invalid voucher. Please try again", 0
 	checkoutBanner1 BYTE "==========================FOOD MENU===============================",0dh,0ah
-					BYTE "1. Nasi Lemak			- RM5",0dh,0ah
-					BYTE "2. Nasi Goreng			- RM7",0dh,0ah
-					BYTE "3. Mee Goreng			- RM6",0dh,0ah
-					BYTE "4. Chicken Rice			- RM8",0dh,0ah
-					BYTE "5. Wantan Mee			- RM7",0dh,0ah
+					BYTE "1. Nasi Lemak			- RM5.50",0dh,0ah
+					BYTE "2. Nasi Goreng			- RM7.50",0dh,0ah
+					BYTE "3. Mee Goreng			- RM6.20",0dh,0ah
+					BYTE "4. Chicken Rice			- RM8.00",0dh,0ah
+					BYTE "5. Wantan Mee			- RM7.00",0dh,0ah
 					BYTE "==========================FOOD MENU===============================",0dh,0ah,0
 	checkoutChoice	BYTE "Please select which food or 0 to stop: ", 0
 
+	txtVoucher		byte "Do you have a discount voucher? (y)es or (n)o : ",0
+	txtInsertVoucher	byte "Please enter the voucher number (e.g. 4321): ",0
 	txtFoodSelected byte "==============Food Selected=============",0dh,0ah,0
-	txtSubTotal		byte "The sub-total is :	RM",0
-	txtSST			byte "		  SST (6%) :	RM",0
+	txtReceipt		byte "========================================",0dh,0ah
+					byte "                 RECEIPT				  ",0dh,0ah
+					byte "========================================",0dh,0ah,0
+	txtSubTotal		byte "Sub-total		:RM",0
+	txtSST			byte "SST (6%)		:	RM",0
+	txtDiscount		byte "Discount		:(RM5)",0
+	txtGrandTotal	byte "Grand Total		:RM",0
 
 	selectedChoice DWORD ?
 	selectedChoice2 DWORD ?
+	voucherChoice byte ?
+	voucherNo		dword ?
 
-	foodPrices		dword 5,7,6,8,7
+	foodPrices		dword 550,750,620,800,700				; Prices need to multiply by 100 in order to show decimals RM7 -> RM700 = RM7.00
 	foodSelected	dword lengthof foodPrices DUP (0)
-
+	foodTotal		dword lengthof foodPrices DUP (0)
+	voucherRM		dword 5
 		
-
-	foodPrice1		dword 5
-	foodPrice2		dword 7
-	foodPrice3		dword 6
-	foodPrice4		dword 8
-	foodPrice5		dword 7
+	foodSubtotal	dword 0
 	foodSum			dword 0
 
-	foodx1			byte " x Nasi Lemak		- RM5",0
-	foodx2			byte " x Nasi Goreng		- RM7",0
-	foodx3			byte " x Mee Goreng		- RM6",0
-	foodx4			byte " x Chicken Rice		RM8",0
-	foodx5			byte " x Wantan Mee		- RM7",0
+	foodx1			byte " x Nasi Lemak		- RM",0
+	foodx2			byte " x Nasi Goreng		- RM",0
+	foodx3			byte " x Mee Goreng		- RM",0
+	foodx4			byte " x Chicken Rice	- RM",0
+	foodx5			byte " x Wantan Mee		- RM",0
 	
 
 ;-------------------------------------------------------------------------------------------------;
@@ -197,124 +208,323 @@ _getChoice:
 		mov edx, offset checkoutChoice						;Output Text and receive input from user
 		call WriteString
 		call ReadInt
-
 		mov selectedChoice, eax
 
-		mov ecx, lengthof foodSelected
-		
+		mov ecx, lengthof foodSelected	
 
 		.if selectedChoice == 1
-			;Increment quantity
-			mov esi, 0
-			add foodSelected[esi], 1
-			mov eax, foodSelected[esi]
-			
+			inc foodSelected[0]				;; Increment Nasi lemak quantity
+
+			;; Display Quantity = 1 x Nasi Lemak	-RM
+			mov eax, foodSelected[0]		
 			call WriteDec
 			mov edx, offset foodx1
 			call WriteString
-			call Crlf
-			call Crlf
-			loop _getChoice
-		.elseif selectedChoice == 2
-			mov esi, 4
-			add foodSelected[esi], 1
-			mov eax, foodSelected[esi]
 
+			;; Quantity * Price
+			mov ebx,  foodPrices[0]
+			mul ebx
+			mov foodTotal[0], eax
+
+			mov ebx, percent			; Divisor = 100
+			xor edx, edx
+			div ebx
+			call writedec
+
+			mov al, '.'             ; Decimal point
+			call WriteChar 
+
+			imul eax, edx, 10       ; EAX = EDX * 10 i.e. New dividend = Old remainder * 10
+			xor edx, edx            ; Clear the high part of dividend
+			div ebx                 ; EAX rem. EDX = EDX:EAX / EBX
+			call WriteDec   
+
+			imul eax, edx, 10       ; EAX = EDX * 10 i.e. New dividend = Old remainder * 10
+			xor edx, edx            ; Clear the high part of dividend
+			div ebx                 ; EAX rem. EDX = EDX:EAX / EBX
+			call WriteDec  
+			call crlf	
+			call crlf
+			jmp _getChoice					; Jump to getChoice
+
+		.elseif selectedChoice == 2
+			inc foodSelected[4]				;; Increment Nasi lemak quantity
+
+			;; Display Quantity
+			mov eax, foodSelected[4]		
 			call WriteDec
 			mov edx, offset foodx2
 			call WriteString
-			call Crlf
-			call Crlf
-			dec cx
-			jne _getChoice
-		.elseif selectedChoice == 3
-			mov esi, 8
-			add foodSelected[esi], 1
-			mov eax, foodSelected[esi]
 
+			;; Quantity * Price
+			mov ebx,  foodPrices[4]
+			mul ebx
+			mov foodTotal[4], eax
+
+			mov ebx, percent			; Divisor = 100
+			xor edx, edx
+			div ebx
+			call writedec
+
+			mov al, '.'             ; Decimal point
+			call WriteChar 
+
+			imul eax, edx, 10       ; EAX = EDX * 10 i.e. New dividend = Old remainder * 10
+			xor edx, edx            ; Clear the high part of dividend
+			div ebx                 ; EAX rem. EDX = EDX:EAX / EBX
+			call WriteDec   
+
+			imul eax, edx, 10       ; EAX = EDX * 10 i.e. New dividend = Old remainder * 10
+			xor edx, edx            ; Clear the high part of dividend
+			div ebx                 ; EAX rem. EDX = EDX:EAX / EBX
+			call WriteDec  
+			call crlf			
+			call crlf
+			jmp _getChoice					; Jump to getChoice
+
+		.elseif selectedChoice == 3
+			inc foodSelected[8]				;; Increment Nasi lemak quantity
+
+			;; Display Quantity = 1 x Nasi Lemak	-RM
+			mov eax, foodSelected[8]		
 			call WriteDec
 			mov edx, offset foodx3
 			call WriteString
-			call Crlf
-			call Crlf
-			dec cx
-			jne _getChoice
-		.elseif selectedChoice == 4
-			mov esi, 12
-			add foodSelected[esi], 1
-			mov eax, foodSelected[esi]
 
+			;; Quantity * Price
+			mov ebx,  foodPrices[8]
+			mul ebx
+			mov foodTotal[8], eax
+
+			mov ebx, percent			; Divisor = 100
+			xor edx, edx
+			div ebx
+			call writedec
+
+			mov al, '.'             ; Decimal point
+			call WriteChar 
+
+			imul eax, edx, 10       ; EAX = EDX * 10 i.e. New dividend = Old remainder * 10
+			xor edx, edx            ; Clear the high part of dividend
+			div ebx                 ; EAX rem. EDX = EDX:EAX / EBX
+			call WriteDec   
+
+			imul eax, edx, 10       ; EAX = EDX * 10 i.e. New dividend = Old remainder * 10
+			xor edx, edx            ; Clear the high part of dividend
+			div ebx                 ; EAX rem. EDX = EDX:EAX / EBX
+			call WriteDec  
+			call crlf			
+			call crlf
+			jmp _getChoice					; Jump to getChoice
+		.elseif selectedChoice == 4
+			inc foodSelected[12]				;; Increment Nasi lemak quantity
+
+			;; Display Quantity = 1 x Nasi Lemak	-RM
+			mov eax, foodSelected[12]		
 			call WriteDec
 			mov edx, offset foodx4
 			call WriteString
-			call Crlf
-			call Crlf
-			dec cx
-			jne _getChoice
-		.elseif selectedChoice == 5
-			mov esi, 16
-			add foodSelected[esi], 1
-			mov eax, foodSelected[esi]
 
+			;; Quantity * Price
+			mov ebx,  foodPrices[12]
+			mul ebx
+			mov foodTotal[12], eax
+
+			mov ebx, percent			; Divisor = 100
+			xor edx, edx
+			div ebx
+			call writedec
+
+			mov al, '.'             ; Decimal point
+			call WriteChar 
+
+			imul eax, edx, 10       ; EAX = EDX * 10 i.e. New dividend = Old remainder * 10
+			xor edx, edx            ; Clear the high part of dividend
+			div ebx                 ; EAX rem. EDX = EDX:EAX / EBX
+			call WriteDec   
+
+			imul eax, edx, 10       ; EAX = EDX * 10 i.e. New dividend = Old remainder * 10
+			xor edx, edx            ; Clear the high part of dividend
+			div ebx                 ; EAX rem. EDX = EDX:EAX / EBX
+			call WriteDec  
+			call crlf			
+			call crlf
+			jmp _getChoice					; Jump to getChoice
+
+		.elseif selectedChoice == 5
+			inc foodSelected[16]				;; Increment Nasi lemak quantity
+
+			;; Display Quantity = 1 x Nasi Lemak	-RM
+			mov eax, foodSelected[16]		
 			call WriteDec
 			mov edx, offset foodx5
 			call WriteString
-			call Crlf
-			call Crlf
-			dec cx
-			jne _getChoice
+
+			;; Quantity * Price
+			mov ebx,  foodPrices[16]
+			mul ebx
+			mov foodTotal[16], eax
+
+			mov ebx, percent			; Divisor = 100
+			xor edx, edx
+			div ebx
+			call writedec
+
+			mov al, '.'             ; Decimal point
+			call WriteChar 
+
+			imul eax, edx, 10       ; EAX = EDX * 10 i.e. New dividend = Old remainder * 10
+			xor edx, edx            ; Clear the high part of dividend
+			div ebx                 ; EAX rem. EDX = EDX:EAX / EBX
+			call WriteDec   
+
+			imul eax, edx, 10       ; EAX = EDX * 10 i.e. New dividend = Old remainder * 10
+			xor edx, edx            ; Clear the high part of dividend
+			div ebx                 ; EAX rem. EDX = EDX:EAX / EBX
+			call WriteDec  
+			call crlf			
+			call crlf
+			jmp _getChoice					; Jump to getChoice
 
 		.elseif selectedChoice == 0
-		call Clrscr
-		mov edx, offset txtFoodSelected
-		call WriteString
-		call Crlf
+			
+			call Clrscr
+			mov edx, offset txtFoodSelected
+			call WriteString
+			call Crlf
 
-		mov ecx, lengthof foodPrices
-		mov esi, 0						; Point to element 0
-		XOR EAX, EAX					; clear EAX value
+			displayFoodSelected:
+				mov eax, foodSelected[0]
+				.if eax > 0
+					mov ecx, lengthof foodPrices
+					call WriteDec
+					mov edx, offset foodx1
+					call WriteString
 
-		displayFoodSelected:
+					mov eax, foodTotal[0]
+					mov ebx, percent			; Divisor = 100
+					xor edx, edx
+					div ebx
+					call writedec
 
-			mov eax, foodSelected[0]
-			.if eax > 0
-				call WriteDec
-				mov edx, offset foodx1
-				call WriteString
-				call Crlf
-			.endif
+					mov al, '.'             ; Decimal point
+					call WriteChar 
 
-			mov eax, foodSelected[4]
-			.if eax > 0
-				call WriteDec
-				mov edx, offset foodx2
-				call WriteString
-				call Crlf
-			.endif
+					imul eax, edx, 10       ; EAX = EDX * 10 i.e. New dividend = Old remainder * 10
+					xor edx, edx            ; Clear the high part of dividend
+					div ebx                 ; EAX rem. EDX = EDX:EAX / EBX
+					call WriteDec   
 
-			mov eax, foodSelected[8]
-			.if eax > 0
-				call WriteDec
-				mov edx, offset foodx3
-				call WriteString
-				call Crlf
-			.endif
+					imul eax, edx, 10       ; EAX = EDX * 10 i.e. New dividend = Old remainder * 10
+					xor edx, edx            ; Clear the high part of dividend
+					div ebx                 ; EAX rem. EDX = EDX:EAX / EBX
+					call WriteDec
+					call Crlf
+				.endif
 
-			mov eax, foodSelected[12]
-			.if eax > 0
-				call WriteDec
-				mov edx, offset foodx4
-				call WriteString
-				call Crlf
-			.endif
+				mov eax, foodSelected[4]
+				.if eax > 0
+					call WriteDec
+					mov edx, offset foodx2
+					call WriteString
+					mov eax, foodTotal[4]
+					mov ebx, percent			; Divisor = 100
+					xor edx, edx
+					div ebx
+					call writedec
 
-			mov eax, foodSelected[16]
-			.if eax > 0
-				call WriteDec
-				mov edx, offset foodx5
-				call WriteString
-				call Crlf
-			.endif
+					mov al, '.'             ; Decimal point
+					call WriteChar 
+
+					imul eax, edx, 10       ; EAX = EDX * 10 i.e. New dividend = Old remainder * 10
+					xor edx, edx            ; Clear the high part of dividend
+					div ebx                 ; EAX rem. EDX = EDX:EAX / EBX
+					call WriteDec   
+
+					imul eax, edx, 10       ; EAX = EDX * 10 i.e. New dividend = Old remainder * 10
+					xor edx, edx            ; Clear the high part of dividend
+					div ebx                 ; EAX rem. EDX = EDX:EAX / EBX
+					call WriteDec
+					call Crlf
+				.endif
+
+				mov eax, foodSelected[8]
+				.if eax > 0
+					call WriteDec
+					mov edx, offset foodx3
+					call WriteString
+					mov eax, foodTotal[8]
+					mov ebx, percent			; Divisor = 100
+					xor edx, edx
+					div ebx
+					call writedec
+
+					mov al, '.'             ; Decimal point
+					call WriteChar 
+
+					imul eax, edx, 10       ; EAX = EDX * 10 i.e. New dividend = Old remainder * 10
+					xor edx, edx            ; Clear the high part of dividend
+					div ebx                 ; EAX rem. EDX = EDX:EAX / EBX
+					call WriteDec   
+
+					imul eax, edx, 10       ; EAX = EDX * 10 i.e. New dividend = Old remainder * 10
+					xor edx, edx            ; Clear the high part of dividend
+					div ebx                 ; EAX rem. EDX = EDX:EAX / EBX
+					call WriteDec
+					call Crlf
+				.endif
+
+				mov eax, foodSelected[12]
+				.if eax > 0
+					call WriteDec
+					mov edx, offset foodx4
+					call WriteString
+					mov eax, foodTotal[12]
+					mov ebx, percent			; Divisor = 100
+					xor edx, edx
+					div ebx
+					call writedec
+
+					mov al, '.'             ; Decimal point
+					call WriteChar 
+
+					imul eax, edx, 10       ; EAX = EDX * 10 i.e. New dividend = Old remainder * 10
+					xor edx, edx            ; Clear the high part of dividend
+					div ebx                 ; EAX rem. EDX = EDX:EAX / EBX
+					call WriteDec   
+
+					imul eax, edx, 10       ; EAX = EDX * 10 i.e. New dividend = Old remainder * 10
+					xor edx, edx            ; Clear the high part of dividend
+					div ebx                 ; EAX rem. EDX = EDX:EAX / EBX
+					call WriteDec
+					call Crlf
+				.endif
+
+				mov eax, foodSelected[16]
+				.if eax > 0
+					call WriteDec
+					mov edx, offset foodx5
+					call WriteString
+					mov eax, foodTotal[16]
+					mov ebx, percent			; Divisor = 100
+					xor edx, edx
+					div ebx
+					call writedec
+
+					mov al, '.'             ; Decimal point
+					call WriteChar 
+
+					imul eax, edx, 10       ; EAX = EDX * 10 i.e. New dividend = Old remainder * 10
+					xor edx, edx            ; Clear the high part of dividend
+					div ebx                 ; EAX rem. EDX = EDX:EAX / EBX
+					call WriteDec   
+
+					imul eax, edx, 10       ; EAX = EDX * 10 i.e. New dividend = Old remainder * 10
+					xor edx, edx            ; Clear the high part of dividend
+					div ebx                 ; EAX rem. EDX = EDX:EAX / EBX
+					call WriteDec
+					call Crlf
+				.endif
 
 			mov ecx, lengthof foodPrices
 			mov esi, 0						; Point to element 0
@@ -335,7 +545,146 @@ _getChoice:
 			call WriteDec
 			call Crlf
 
+			readVoucher:
+				mov edx, offset txtVoucher
+				call writestring
+				call readchar
+				mov voucherChoice, al
+				call Crlf
+				call Crlf
+
+			compareY:
+				cmp		voucherChoice, 'y'
+				je		inputVoucher		; input == 'y'
+				jne		compareN	; input != 'y'
+
+			compareN:
+				cmp voucherChoice, 'n'
+				je   showGrandTotal
+				jne	 errorVoucher
+
+			errorVoucher:
+				mov edx, offset invalidVoucher
+				call writestring
+				call Crlf
+				loop readVoucher
 			
+			
+
+			inputVoucher:
+				mov edx, offset txtInsertVoucher
+				call writestring
+				call readint
+				mov voucherNo, eax
+
+				.if voucherNo == 0000
+					
+;------------------Subtract voucher amount from foodSum
+					mov eax, foodSum
+					mov foodSubtotal, eax
+					mov ebx, voucherRM
+					sub eax, ebx
+					mov foodSum, eax
+					call showGrandTotal
+				.endif
+
+			showGrandTotal:
+				call Clrscr
+				xor eax, eax
+
+				mov edx, offset txtReceipt
+				call writestring
+				call crlf
+
+				mov eax, foodSelected[0]
+				.if eax > 0
+					mov ecx, lengthof foodPrices
+					call WriteDec
+					mov edx, offset foodx1
+					call WriteString
+
+					mov eax, foodTotal[0]
+					call writeDec
+					call Crlf
+				.endif
+
+				mov eax, foodSelected[4]
+				.if eax > 0
+					call WriteDec
+					mov edx, offset foodx2
+					call WriteString
+					mov eax, foodTotal[4]
+					call writeDec
+					call Crlf
+				.endif
+
+				mov eax, foodSelected[8]
+				.if eax > 0
+					call WriteDec
+					mov edx, offset foodx3
+					call WriteString
+					mov eax, foodTotal[8]
+					call writeDec
+					call Crlf
+				.endif
+
+				mov eax, foodSelected[12]
+				.if eax > 0
+					call WriteDec
+					mov edx, offset foodx4
+					call WriteString
+					mov eax, foodTotal[12]
+					call writeDec
+					call Crlf
+				.endif
+
+				mov eax, foodSelected[16]
+				.if eax > 0
+					call WriteDec
+					mov edx, offset foodx5
+					call WriteString
+					mov eax, foodTotal[16]
+					call writeDec
+					call Crlf
+				.endif
+
+				call Crlf
+				mov edx, offset seperator
+				call writestring
+				call Crlf
+				call Crlf
+;---------------Subtotal
+				mov edx, offset txtSubTotal
+				call writestring
+
+				mov eax, foodSubtotal
+				call writedec
+				call crlf
+
+				mov edx, offset txtDiscount
+				call writestring
+				call crlf
+
+;---------------Grandtotal
+				mov edx, offset txtGrandTotal
+				call writestring
+				mov eax, foodSum
+				call writedec
+				call crlf
+
+				readChoice:
+					mov edx, offset txtVoucher
+					call writestring
+					call readint
+					mov selectedChoice, eax
+					call Crlf
+					call Crlf
+
+				
+
+				dec cx
+				jne _displayMainMenu
+
 		.else
 			call Crlf
 			mov edx, offset invalidInput
@@ -348,8 +697,8 @@ _getChoice:
 ;--------------------------------------------END FoodMenu ---------------------------------------;
 ;-------------------------------------------------------------------------------------------------;
 
-
-	INVOKE ExitProcess,0		; INVOKE to call a function | Terminate the process
+	TERMINATE:
+		INVOKE ExitProcess,0		; INVOKE to call a function | Terminate the process
 
 	main ENDP		;denotes the end of the procedure label
 	END main		;denotes the end of the main driver
