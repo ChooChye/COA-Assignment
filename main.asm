@@ -803,8 +803,8 @@ _displayManageStock :
 		mov edx,OFFSET mmBannerMenu
 		call WriteString
 		call Crlf
-		
-	
+
+
 		mov edx, offset mmChoiceMenu						;Output Text and receive input from user
 		call WriteString
 		call ReadInt
