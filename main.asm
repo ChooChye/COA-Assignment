@@ -144,16 +144,17 @@ INCLUDE Macros.inc
 ;---------------------------------------------------------------------------------------------------;
 
 
-	mmBannerAdd		BYTE "===================MANAGE STOCK MENU===================", 0dh,0ah
+	mmBannerAdd		BYTE "===================ADD NEW ITEM===================", 0dh,0ah,0
 				
-					BYTE "Please enter new product name: ",0
+	choiceName				BYTE "Please enter new product name: ",0
 	
 	
 
 	;prodName		QWORD	"NasiLemak", "NasiGoreng", "MeeGoreng", "ChickenRice", "WantanMee"
 
-	addErrorText	BYTE "This product name is existed, Please try again",0
+	addErrorText	BYTE "This product name is existed, Please try again or enter 0 to stop",0
 	mmChoiceAdd			DWORD ?
+
 
 ;-------------------------------------------------------------------------------------------------;
 ;-----------------------------------------END Add Item -------------------------------------------;
@@ -272,6 +273,7 @@ _displayMainMenu:
 	mov edx, offset selectedChoice						;Output Text and receive input from user
 	call WriteString
 	call ReadInt
+	mov selectedChoice, eax
 
 	.if selectedChoice == 1
 		JMP _displayFoodMenu
@@ -799,6 +801,7 @@ _getChoice:
 ;-------------------------------------------------------------------------------------------------;
 
 _displayManageStock :
+
 		call Clrscr
 		mov edx,OFFSET mmBannerMenu
 		call WriteString
@@ -808,11 +811,15 @@ _displayManageStock :
 		mov edx, offset mmChoiceMenu						;Output Text and receive input from user
 		call WriteString
 		call ReadInt
+		mov mmChoiceMenu,eax
+
 
 		.if mmChoiceMenu == 1
 			JMP _displayAddItem
 		.elseif mmChoiceMenu == 2
 			JMP _displayUpdateItem
+		.elseif mmChoiceMenu == 5
+			JMP _displayMainMenu
 		.endif
 
 
@@ -833,30 +840,30 @@ _displayUpdateItem :
 		jmp _getViewChoice
 
 _getAddChoice:
+	
 		
-		mov		edx, offset mmBannerAdd
-		call	WriteString
-		call	ReadString
-		call crlf
-		mov		mmChoiceAdd, eax
 
-	;	mov ecx, lengthof foodSelectedList	
+		xor edx,edx
+		mov edx, offset choiceName						;Output Text and receive input from user
+		call WriteString
+		call ReadInt
+		mov mmChoiceAdd, eax
 
-;		.if mmChoiceAdd == "NasiLemak"
-		.if mmChoiceAdd == "Nasi"
+		.if mmChoiceAdd == 1
 			mov edx, offset addErrorText
+			call Crlf
 			call WriteString
 			call Crlf
+			call Crlf
 			loop _getAddChoice
-		
-		
+		.elseif mmChoiceAdd == 0
+			jmp	_displayManageStock
 		.endif
-
 	
 
 
 _getViewChoice:
-
+		xor edx,edx
 		mov edx, offset checkoutChoicePL						;Output Text and receive input from user
 		call WriteString
 		call ReadInt
