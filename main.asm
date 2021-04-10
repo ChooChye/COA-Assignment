@@ -17,7 +17,6 @@ INCLUDE Macros.inc
 	;define variables here
 	 
 	invalidInput		BYTE " =====  INVALID INPUT =====",0
-	seperator			byte "=======================================",0
 	percent				dword 100
 ;-------------------------------------------------------------------------------------------------;
 ;------------------------------------START Data for Login Module -------------------------------------;
@@ -86,23 +85,35 @@ INCLUDE Macros.inc
 
 	invalidVoucher	byte "Invalid voucher. Please try again", 0
 	invalidPay		byte "ERROR. Payable Amount must be greater than GrandTotal",0
-	checkoutBanner1 BYTE "==========================FOOD MENU===============================",0
-	checkoutBanner2	BYTE "1. Nasi Lemak			- RM ",0
-	checkoutBanner3	BYTE "2. Nasi Goreng			- RM ",0
-	checkoutBanner4	BYTE "3. Mee Goreng			- RM ",0
-	checkoutBanner5	BYTE "4. Chicken Rice			- RM ",0
-	checkoutBanner6	BYTE "5. Wantan Mee			- RM ",0
-	checkoutBanner7	BYTE "==========================FOOD MENU===============================",0dh,0ah,0
+	checkoutBanner1 BYTE "==========================FOOD MENU===============================",0dh,0ah
+					BYTE "                                                                  ",0
+	checkoutBanner2	BYTE "1. Nasi Lemak			-> RM ",0
+	checkoutBanner3	BYTE "2. Nasi Goreng			-> RM ",0
+	checkoutBanner4	BYTE "3. Mee Goreng			-> RM ",0
+	checkoutBanner5	BYTE "4. Chicken Rice			-> RM ",0
+	checkoutBanner6	BYTE "5. Wantan Mee			-> RM ",0
+	checkoutBanner7	BYTE "                                                                  ",0dh,0ah
+					BYTE "==========================FOOD MENU===============================",0dh,0ah,0
 	checkoutChoice	BYTE "Please select which food | 0 to checkout | 99 to return to main menu: ", 0
 	rChoice			byte ?
 	txtVoucher		byte "Do you have a discount voucher? (y)es or (n)o : ",0
 	txtInsertVoucher	byte "Please enter the voucher number (e.g. 4321): ",0
-	txtFoodSelected byte "==============Food Selected=============",0dh,0ah,0
+	txtFoodSelected byte "========================================",0dh,0ah
+					byte "|                                      |",0dh,0ah
+					byte "|            RECEIPT PREVIEW           |",0dh,0ah
+					byte "|                                      |",0dh,0ah
+					byte "========================================",0dh,0ah,0
 	txtReceipt		byte "========================================",0dh,0ah
-					byte "                 RECEIPT				  ",0dh,0ah
+					byte "|                                      |",0dh,0ah
+					byte "|               RECEIPT                |",0dh,0ah
+					byte "|                                      |",0dh,0ah,0
+	txtReceipt2		byte "|    Invoice No :",0
+	txtReceipt3                                    byte "                 |",0
+	txtReceipt4		byte "|                                      |",0dh,0ah
 					byte "========================================",0dh,0ah,0
 	txtBack			byte "Transaction completed...",0dh,0ah
 					byte "Press (q) to return back to main menu : ",0
+	seperator		byte "=======================================",0
 	txtSubTotal		byte "Sub-total		:RM ",0
 	txtNewSubTotal	byte "         		:RM ",0
 	txtSST			byte "SST (6%)		:RM ",0
@@ -131,11 +142,11 @@ INCLUDE Macros.inc
 	foodSubtotal	dword 0
 	foodSum			dword 0
 
-	foodx1			byte " x Nasi Lemak		- RM ",0
-	foodx2			byte " x Nasi Goreng		- RM ",0
-	foodx3			byte " x Mee Goreng		- RM ",0
-	foodx4			byte " x Chicken Rice	- RM ",0
-	foodx5			byte " x Wantan Mee		- RM ",0
+	foodx1			byte " x Nasi Lemak		-> RM ",0
+	foodx2			byte " x Nasi Goreng		-> RM ",0
+	foodx3			byte " x Mee Goreng		-> RM ",0
+	foodx4			byte " x Chicken Rice	-> RM ",0
+	foodx5			byte " x Wantan Mee		-> RM ",0
 
 	foodxx1			byte " x Nasi Lemak ",0
 	foodxx2			byte " x Nasi Goreng ",0
@@ -825,9 +836,11 @@ _getChoice:
 				add esi, type foodSelected		; increase esi
 				loop sum						; loop sum
 
-;----------Subtotal				
+;----------Subtotal
+			mov edx, offset seperator
+			call writestring
+			call crlf
 			mov edx, offset txtSubTotal
-			call Crlf
 			call WriteString
 			mov eax, foodSum
 			mov ebx, percent			; Divisor = 100
@@ -848,7 +861,7 @@ _getChoice:
 			div ebx                 
 			call WriteDec
 			call Crlf
-
+			call Crlf
 			readVoucher:
 				mov edx, offset txtVoucher
 				call writestring
@@ -897,6 +910,21 @@ _getChoice:
 				xor eax, eax
 
 				mov edx, offset txtReceipt
+				call writestring
+				
+				
+				mov edx, offset txtReceipt2
+				call writestring
+
+				mov eax, 9999
+				call randomrange
+				call writeint
+
+				mov edx, offset txtReceipt3
+				call writestring
+				call crlf
+
+				mov edx, offset txtReceipt4
 				call writestring
 				call crlf
 
@@ -1218,13 +1246,15 @@ _getChoice:
 					jmp backToMenu
 		.else
 			call Crlf
-			mov eax, red+(white+16)
+			mov eax, white+(red*16)
 			call settextcolor
 			mov edx, offset invalidInput
-			
 			call WriteString
+			mov eax, white
+			call settextcolor
 			call crlf 
 			call crlf
+			jmp _getChoice
 		.endif
 
 	
