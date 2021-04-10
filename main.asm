@@ -1258,6 +1258,7 @@ _displayManageStock :
 		.elseif mmChoiceMenu == 4
 			JMP _displayViewItem
 		.elseif mmChoiceMenu == 5
+			call clrscr
 			JMP _displayMainMenu
 		.endif
 
@@ -1702,7 +1703,25 @@ _getUpdateChoice:
 					
 					mov eax, updateNewPrice
 					mov foodPrices[esi], eax
-					call writeDec
+					mov ebx, percent			; Divisor = 100
+					xor edx, edx
+					div ebx
+					call writedec
+		
+					mov al, '.'             ; Decimal point
+					call WriteChar 
+
+					imul eax, edx, 10       
+					xor edx, edx            
+					div ebx                 
+					call WriteDec   
+
+					imul eax, edx, 10       
+					xor edx, edx            
+					div ebx                 
+					call WriteDec 
+					call crlf
+
 					mov eax, white
 					call settextcolor
 					call Crlf
