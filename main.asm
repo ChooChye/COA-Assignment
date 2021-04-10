@@ -25,9 +25,15 @@ INCLUDE Macros.inc
 
 
 	buffer			BYTE 21 DUP(0)
-	loginBanner		BYTE "==========================LOGIN===============================",0
-	loginBanner1	BYTE "Enter username: ",0
-	loginBanner2	BYTE "Enter password : ", 0
+	loginBanner1	BYTE "=========================POS SYSTEM===========================",0dh,0ah
+					byte "|                                                             |",0dh,0ah
+					BYTE "|                         LOGIN                               |",0dh,0ah
+					BYTE "|                        =======                              |",0dh,0ah
+	blankBanner		byte "|                                                             |",0dh,0ah,0
+	loginBanner2	BYTE "|            Enter Username :                                 |",0
+	loginBanner3	BYTE "|            Enter Password :                                 |",0
+	loginBannerEnd	BYTE "=========================POS SYSTEM===========================",0
+	
 
 	staffName		BYTE "Jonathan Lim",0
 	staffID			DWORD 1209
@@ -35,7 +41,7 @@ INCLUDE Macros.inc
 
 	loginInputStaffID	DWORD ?
 	loginInputStaffPass	DWORD ?
-
+	errorAdjust			dword 0
 	loginErrorText	BYTE "Staff ID does not exist, Please try again",0
 	loginErrorText2	BYTE "Password incorrect, Please try again",0
 	logoutText BYTE "Successfully logged out.",0
@@ -51,20 +57,21 @@ INCLUDE Macros.inc
 ;-------------------------------------------------------------------------------------------------;
 
 
-	mmBanner1		BYTE "==========================MAIN MENU===============================",0dh,0ah
-					BYTE "1. Checkout",0dh,0ah
-					BYTE "2. Manage Stock",0dh,0ah
-					BYTE "3. Logout",0dh,0ah
-					BYTE "Please select an option: ",0
+	mmBanner1		BYTE "=========================-MAIN MENU-==============================",0dh,0ah
+					BYTE "|                                                                |",0dh,0ah
+					BYTE "|  1. Checkout                                                   |",0dh,0ah
+					BYTE "|  2. Manage Stock                                               |",0dh,0ah
+					BYTE "|  3. Logout                                                     |",0dh,0ah
+					BYTE "|  Please select an option: ",0
 
 	mmChoice		DWORD ?
 	mminvalidInput	BYTE " ===========================================",0dh,0ah
 					BYTE " =  INVALID INPUT. Please enter 1,2,3 only =",0dh,0ah
 					BYTE " ===========================================",0
 	mmSummary		byte " =========================================== ",0dh,0ah
-					byte " ",0dh,0ah
-					byte "                SUMMARY REPORT               ",0dh,0ah
-					byte " ",0dh,0ah
+					byte " |                                         |",0dh,0ah
+					byte " |              SUMMARY REPORT             |",0dh,0ah
+					byte " |                                         |",0dh,0ah
 					byte " =========================================== ",0dh,0ah,0
 	mmGT			byte " =========================================== ",0dh,0ah
 					byte " Grand Total Sales : RM ",0
@@ -79,13 +86,13 @@ INCLUDE Macros.inc
 
 	invalidVoucher	byte "Invalid voucher. Please try again", 0
 	invalidPay		byte "ERROR. Payable Amount must be greater than GrandTotal",0
-	checkoutBanner1 BYTE "==========================FOOD MENU===============================",0dh,0ah
-					BYTE "1. Nasi Lemak			- RM5.50",0dh,0ah
-					BYTE "2. Nasi Goreng			- RM7.50",0dh,0ah
-					BYTE "3. Mee Goreng			- RM6.20",0dh,0ah
-					BYTE "4. Chicken Rice			- RM8.00",0dh,0ah
-					BYTE "5. Wantan Mee			- RM7.00",0dh,0ah
-					BYTE "==========================FOOD MENU===============================",0dh,0ah,0
+	checkoutBanner1 BYTE "==========================FOOD MENU===============================",0
+	checkoutBanner2	BYTE "1. Nasi Lemak			- RM ",0
+	checkoutBanner3	BYTE "2. Nasi Goreng			- RM ",0
+	checkoutBanner4	BYTE "3. Mee Goreng			- RM ",0
+	checkoutBanner5	BYTE "4. Chicken Rice			- RM ",0
+	checkoutBanner6	BYTE "5. Wantan Mee			- RM ",0
+	checkoutBanner7	BYTE "==========================FOOD MENU===============================",0dh,0ah,0
 	checkoutChoice	BYTE "Please select which food | 0 to checkout | 99 to return to main menu: ", 0
 	rChoice			byte ?
 	txtVoucher		byte "Do you have a discount voucher? (y)es or (n)o : ",0
@@ -279,22 +286,45 @@ INCLUDE Macros.inc
 
 _login:
 	xor eax, eax
-	mov edx, offset loginBanner
-	call WriteString
-	call Crlf
-
 	mov edx, offset loginBanner1
 	call WriteString
+	mov edx, offset blankBanner
+	call WriteString
+	mov edx, offset loginBanner2
+	call WriteString
+	mov  dl,31  ;column
+	mov eax, errorAdjust
+	.if eax == 0
+		mov  dh,6  ;row
+		call Gotoxy
+	.else
+		mov  dh,7  ;row
+		call Gotoxy
+	.endif
 	call ReadInt
 	mov loginInputStaffID, eax
 	
 	.if loginInputStaffID == 1209
-		mov edx, offset loginBanner2
+		mov edx, offset loginBanner3
 		call WriteString
+		mov  dl,31  ;column
+		mov eax, errorAdjust
+		.if eax == 0
+			mov  dh,7  ;row
+			call Gotoxy
+		.else
+			mov  dh,8  ;row
+			call Gotoxy
+		.endif
+		mov eax, black + (black * 16)
+		call settextcolor
 		call ReadInt
+		
 		mov loginInputStaffPass, eax
 		.if loginInputStaffPass == 1234
 			call clrscr
+			mov eax, white
+			call settextcolor
 			JMP _displayMainMenu			;Login successful
 		.else
 			call Clrscr
@@ -307,6 +337,7 @@ _login:
 			mov eax, white
 			call settextcolor
 			call Crlf
+			mov errorAdjust, 1
 			jmp _login
 		.endif
 	.else
@@ -320,6 +351,7 @@ _login:
 		mov eax, white
 		call settextcolor
 		call Crlf
+		mov errorAdjust, 1
 		jmp _login
 	.endif
 	
@@ -334,6 +366,7 @@ _login:
 ;-------------------------------------------------------------------------------------------------;
 
 _displayMainMenu:
+	
 	mov edx, offset mmBanner1
 	call WriteString
 	
@@ -431,7 +464,125 @@ _displayFoodMenu :
 		mov edx,OFFSET checkoutBanner1
 		call WriteString
 		call Crlf
+
+		mov edx,OFFSET checkoutBanner2
+		call WriteString
 		
+		mov eax, foodPrices[0]
+		mov ebx, percent			; Divisor = 100
+		xor edx, edx
+		div ebx
+		call writedec
+		
+		mov al, '.'             ; Decimal point
+		call WriteChar 
+
+		imul eax, edx, 10       
+		xor edx, edx            
+		div ebx                 
+		call WriteDec   
+
+		imul eax, edx, 10       
+		xor edx, edx            
+		div ebx                 
+		call WriteDec 
+		call crlf
+
+		mov edx,OFFSET checkoutBanner3
+		call WriteString
+
+		mov eax, foodPrices[4]
+		mov ebx, percent			; Divisor = 100
+		xor edx, edx
+		div ebx
+		call writedec
+		
+		mov al, '.'             ; Decimal point
+		call WriteChar 
+
+		imul eax, edx, 10       
+		xor edx, edx            
+		div ebx                 
+		call WriteDec   
+
+		imul eax, edx, 10       
+		xor edx, edx            
+		div ebx                 
+		call WriteDec 
+		call crlf
+
+		mov edx,OFFSET checkoutBanner4
+		call WriteString
+
+		mov eax, foodPrices[8]
+		mov ebx, percent			; Divisor = 100
+		xor edx, edx
+		div ebx
+		call writedec
+		
+		mov al, '.'             ; Decimal point
+		call WriteChar 
+
+		imul eax, edx, 10       
+		xor edx, edx            
+		div ebx                 
+		call WriteDec   
+
+		imul eax, edx, 10       
+		xor edx, edx            
+		div ebx                 
+		call WriteDec 
+		call crlf
+
+		mov edx,OFFSET checkoutBanner5
+		call WriteString
+
+		mov eax, foodPrices[12]
+		mov ebx, percent			; Divisor = 100
+		xor edx, edx
+		div ebx
+		call writedec
+		
+		mov al, '.'             ; Decimal point
+		call WriteChar 
+
+		imul eax, edx, 10       
+		xor edx, edx            
+		div ebx                 
+		call WriteDec   
+
+		imul eax, edx, 10       
+		xor edx, edx            
+		div ebx                 
+		call WriteDec 
+		call crlf
+
+		mov edx,OFFSET checkoutBanner6
+		call WriteString
+
+		mov eax, foodPrices[16]
+		mov ebx, percent			; Divisor = 100
+		xor edx, edx
+		div ebx
+		call writedec
+		
+		mov al, '.'             ; Decimal point
+		call WriteChar 
+
+		imul eax, edx, 10       
+		xor edx, edx            
+		div ebx                 
+		call WriteDec   
+
+		imul eax, edx, 10       
+		xor edx, edx            
+		div ebx                 
+		call WriteDec 
+		call crlf
+
+		mov edx,OFFSET checkoutBanner7
+		call WriteString
+		call crlf
 
 _getChoice:
 		mov edx, offset checkoutChoice						;Output Text and receive input from user
@@ -628,7 +779,7 @@ _getChoice:
 
 			mov ecx, lengthof foodSelected
 			mov esi, 0
-
+			call displayFS
 			displayFS:
 				.if foodSelected[esi] > 0
 					mov eax, foodSelected[esi]
@@ -661,6 +812,7 @@ _getChoice:
 				.endif
 
 ;--------------CALCULATE SUM
+		calcSum:
 			mov ecx, lengthof foodPrices
 			mov esi, 0						; Point to element 0
 			XOR EAX, EAX					; clear EAX value
@@ -751,7 +903,36 @@ _getChoice:
 				mov ecx, lengthof foodSelected
 				mov esi, 0
 
-				call displayFS
+				displayFS2:
+				.if foodSelected[esi] > 0
+					mov eax, foodSelected[esi]
+					call writedec
+					
+					mov edx, arrFoodName[esi]
+					call writestring
+
+					mov eax, foodTotal[esi]
+					mov ebx, percent			; Divisor = 100
+					xor edx, edx
+					div ebx
+					call writedec
+
+					mov al, '.'             ; Decimal point
+					call WriteChar 
+
+					imul eax, edx, 10       
+					xor edx, edx            
+					div ebx                 
+					call WriteDec   
+
+					imul eax, edx, 10       
+					xor edx, edx            
+					div ebx                 
+					call WriteDec
+					call Crlf
+					add esi, type foodSelected
+					loop displayFS2
+				.endif
 
 				xor eax, eax
 				xor ebx, ebx
@@ -933,49 +1114,49 @@ _getChoice:
 					call readint
 					mov payAmount, eax
 				
-				mov eax, payAmount
-				mov ebx, foodSum
-				.if eax < ebx
-					;;Error Message
-					call crlf
-					mov eax, white+(red*16)
-					call settextcolor
-					mov edx, offset invalidPay
-					call writestring
-					mov eax, white
-					call settextcolor
-					call crlf
-					call crlf
-					loop payBill
-				.else	
-					;-----------Show balance
-					mov edx, offset txtBal
-					call writestring
+					mov eax, payAmount
+					mov ebx, foodSum
+					.if eax < ebx
+						;;Error Message
+						call crlf
+						mov eax, white+(red*16)
+						call settextcolor
+						mov edx, offset invalidPay
+						call writestring
+						mov eax, white
+						call settextcolor
+						call crlf
+						call crlf
+						loop payBill
+					.else	
+						;-----------Show balance
+						mov edx, offset txtBal
+						call writestring
 
-					mov eax, payAmount			
-					mov ebx, foodSum			
-					sub eax, ebx
-					mov foodSum, eax
-					mov ebx, percent			; Divisor = 100
-					xor edx, edx
-					div ebx
-					call writedec
+						mov eax, payAmount			
+						mov ebx, foodSum			
+						sub eax, ebx
+						mov foodSum, eax
+						mov ebx, percent			; Divisor = 100
+						xor edx, edx
+						div ebx
+						call writedec
 
-					mov al, '.'             ; Decimal point
-					call WriteChar 
+						mov al, '.'             ; Decimal point
+						call WriteChar 
 
-					imul eax, edx, 10       
-					xor edx, edx            
-					div ebx                 
-					call WriteDec   
+						imul eax, edx, 10       
+						xor edx, edx            
+						div ebx                 
+						call WriteDec   
 
-					imul eax, edx, 10       
-					xor edx, edx            
-					div ebx                 
-					call WriteDec
-					call Crlf
-					jmp backToMenu
-				.endif
+						imul eax, edx, 10       
+						xor edx, edx            
+						div ebx                 
+						call WriteDec
+						call Crlf
+						jmp backToMenu
+					.endif
 
 				backToMenu:
 			;---------RESET VALUES
@@ -1429,6 +1610,7 @@ _getUpdateChoice:
 				mov edx, offset lineBanner
 				call WriteString
 				call Crlf
+				mov esi, 0
 				jmp _chkUpdatePrice
 
 			.elseif selectedChoiceP2 == 2		; product = nasi goreng
@@ -1442,6 +1624,7 @@ _getUpdateChoice:
 				mov edx, offset lineBanner
 				call WriteString
 				call Crlf
+				mov esi, 4
 				jmp _chkUpdatePrice
 			.elseif selectedChoiceP2 == 3		; product = mee goreng
 				call Crlf
@@ -1454,6 +1637,7 @@ _getUpdateChoice:
 				mov edx, offset lineBanner
 				call WriteString
 				call Crlf
+				mov esi, 8
 				jmp _chkUpdatePrice
 			.elseif selectedChoiceP2 == 4		; product = Chicken rice
 				call Crlf
@@ -1466,6 +1650,7 @@ _getUpdateChoice:
 				mov edx, offset lineBanner
 				call WriteString
 				call Crlf
+				mov esi, 12
 				jmp _chkUpdatePrice
 			.elseif selectedChoiceP2 == 5		; product = wantan mee
 				call Crlf
@@ -1478,6 +1663,7 @@ _getUpdateChoice:
 				mov edx, offset lineBanner
 				call WriteString
 				call Crlf
+				mov esi, 16
 				jmp _chkUpdatePrice
 			.else			; invalid input
 
@@ -1498,7 +1684,6 @@ _getUpdateChoice:
 				call WriteString
 				call ReadInt
 				mov updateNewPrice, eax
-
 				.if updateNewPrice >= 100
 					
 					call Crlf
@@ -1516,6 +1701,7 @@ _getUpdateChoice:
 					call WriteString
 					
 					mov eax, updateNewPrice
+					mov foodPrices[esi], eax
 					call writeDec
 					mov eax, white
 					call settextcolor
@@ -1591,7 +1777,7 @@ _getUpdateChoice:
 			mov	edx, offset newVoucherBanner
 			call writestring
 			call crlf
-			mov	eax, updateNewPrice
+			mov foodPrices[0], eax
 			call writestring
 			call crlf
 			mov	edx, offset updatePriceSuccess
