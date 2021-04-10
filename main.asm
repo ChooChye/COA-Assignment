@@ -107,8 +107,8 @@ INCLUDE Macros.inc
 					byte "|                                      |",0dh,0ah
 					byte "|               RECEIPT                |",0dh,0ah
 					byte "|                                      |",0dh,0ah,0
-	txtReceipt2		byte "|    Invoice No :",0
-	txtReceipt3                                    byte "                 |",0
+	txtReceipt2		byte "|    Invoice No : #",0
+	txtReceipt3                                    byte "                |",0
 	txtReceipt4		byte "|                                      |",0dh,0ah
 					byte "========================================",0dh,0ah,0
 	txtBack			byte "Transaction completed...",0dh,0ah
@@ -894,7 +894,7 @@ _getChoice:
 			errorVoucher:
 				mov eax, white+(red*16)
 				call settextcolor
-				mov edx, offset invalidVoucher
+				mov edx, offset invalidInput
 				call writestring
 				mov eax, white
 				call settextcolor
@@ -921,6 +921,7 @@ _getChoice:
 
 				V1:
 					inc discountExist
+					mov voucherPInput, esi
 					call showGrandTotal
 				V2:
 					add esi, type vouchers
@@ -941,7 +942,7 @@ _getChoice:
 
 				mov eax, 9999
 				call randomrange
-				call writeint
+				call writedec
 
 				mov edx, offset txtReceipt3
 				call writestring
@@ -1033,8 +1034,9 @@ _getChoice:
 						.if eax == ebx						
 						mov edx, offset txtDiscount
 						call writestring
-
-						mov eax, voucherRMS
+						mov esi, voucherPInput
+						mov eax, voucherRM[esi]
+						mov voucherRMS, eax
 						mov ebx, percent			; Divisor = 100
 						xor edx, edx            
 						div ebx					;; Divide the foodSum by 100 = foodSum/100
