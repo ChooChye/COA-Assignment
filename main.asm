@@ -117,7 +117,8 @@ INCLUDE Macros.inc
 	txtSubTotal		byte "Sub-total		:RM ",0
 	txtNewSubTotal	byte "         		:RM ",0
 	txtSST			byte "SST (6%)		:RM ",0
-	txtDiscount		byte "Discount		:(RM5.90)",0
+	txtDiscount		byte "Discount		:RM (",0
+	txtDiscount2	byte ")",0
 	txtGrandTotal	byte "Grand Total		:RM ",0
 	txtPay			byte "Enter amount payable	:RM ",0
 	txtBal			byte "Balance			:RM ",0
@@ -129,6 +130,11 @@ INCLUDE Macros.inc
 	voucherNo		dword ?
 	payAmount		dword ?
 
+	voucherR			dword 590, 3 dup (?)
+	voucherCInput		dword ?
+	voucherPInput		dword ?
+	txtVoucherPrice		byte "Voucher Price RM ",0
+
 	sstTax			dword 600
 	sst				dword ?
 
@@ -137,7 +143,9 @@ INCLUDE Macros.inc
 	foodPrices		dword 550,750,620,800,700				; Prices need to multiply by 100 in order to show decimals RM7 -> RM700 = RM7.00
 	foodSelected	dword lengthof foodPrices DUP (0)
 	foodTotal		dword lengthof foodPrices DUP (0)
-	voucherRM		dword 590
+	vouchers		dword 5555, 3 dup (?)
+	voucherRM		dword 590, 3 dup (?)
+	voucherRMS      dword ?
 		
 	foodSubtotal	dword 0
 	foodSum			dword 0
@@ -277,6 +285,8 @@ INCLUDE Macros.inc
 	selectedChoiceP2 DWORD ?
 	uchoice		byte	?
 
+	txtVoucherAdd			byte "Add a new voucher code (e.g. 8904): ",0
+	
 	
 	
 ;-------------------------------------------------------------------------------------------------;
@@ -898,13 +908,26 @@ _getChoice:
 				call readint
 				mov voucherNo, eax
 
-				.if voucherNo == 5555
+				mov ecx, lengthof vouchers
+				mov esi, 0
+
+				compareVoucherInput:
+					mov eax, vouchers[esi]
+					mov ebx, voucherNo
+
+					cmp eax, ebx
+					je	V1
+					jne V2
+
+				V1:
 					inc discountExist
 					call showGrandTotal
-				.else
-					jmp errorVoucher
-				.endif
-
+				V2:
+					add esi, type vouchers
+					loop compareVoucherInput
+					
+				jmp errorVoucher
+				
 			showGrandTotal:
 				call Clrscr
 				xor eax, eax
@@ -1000,42 +1023,75 @@ _getChoice:
 ;--------------Voucher
 				mov eax, discountExist
 				.if eax == 1
-					mov edx, offset txtDiscount
-					call writestring
-					call crlf
 
-					;------------------Subtract voucher amount from foodSum
-					mov eax, foodSum
-					mov foodSubtotal, eax
-					mov ebx, voucherRM
-					sub eax, ebx
-					mov foodSum, eax
+					mov ecx, lengthof vouchers
+					mov esi, 0
 
-					;------------------Show new sub total
-					mov edx, offset txtNewSubtotal
-					call writestring
-					mov eax, foodSum
+					checkVoucher:
+						mov eax, vouchers[esi]
+						mov ebx, voucherNo
+						.if eax == ebx						
+						mov edx, offset txtDiscount
+						call writestring
+
+						mov eax, voucherRMS
+						mov ebx, percent			; Divisor = 100
+						xor edx, edx            
+						div ebx					;; Divide the foodSum by 100 = foodSum/100
+						call WriteDec
+
+						mov al, '.'             ; Decimal point
+						call WriteChar 
+
+						imul eax, edx, 10       
+						xor edx, edx            
+						div ebx                 
+						call WriteDec   
+
+						imul eax, edx, 10       
+						xor edx, edx            
+						div ebx                 
+						call WriteDec
+						
+						mov edx, offset txtDiscount2
+						call writestring
+						call crlf
+
+
+						xor ebx, ebx
+						;------------------Subtract voucher amount from foodSum
+						mov eax, foodSum
+						mov foodSubtotal, eax
+						mov ebx, voucherRMS
+						sub eax, ebx
+						mov foodSum, eax
+						;------------------Show new sub total
+						mov edx, offset txtNewSubtotal
+						call writestring
+						mov eax, foodSum
 					
-					mov ebx, percent			; Divisor = 100
-					xor edx, edx            
-					div ebx					;; Divide the foodSum by 100 = foodSum/100
-					call WriteDec
+						mov ebx, percent			; Divisor = 100
+						xor edx, edx            
+						div ebx					;; Divide the foodSum by 100 = foodSum/100
+						call WriteDec
 
-					mov al, '.'             ; Decimal point
-					call WriteChar 
+						mov al, '.'             ; Decimal point
+						call WriteChar 
 
-					imul eax, edx, 10       
-					xor edx, edx            
-					div ebx                 
-					call WriteDec   
+						imul eax, edx, 10       
+						xor edx, edx            
+						div ebx                 
+						call WriteDec   
 
-					imul eax, edx, 10       
-					xor edx, edx            
-					div ebx                 
-					call WriteDec
-					call Crlf
-
-					
+						imul eax, edx, 10       
+						xor edx, edx            
+						div ebx                 
+						call WriteDec
+						call Crlf
+					.else			; if voucher does not match with system
+						add esi, type vouchers
+						jmp checkVoucher
+					.endif
 				.endif
 
 				;;------ Move sum to exitGrandTotal, To display the total sales after logout
@@ -1295,11 +1351,57 @@ _displayManageStock :
 
 _displayAddItem :
 		
-		call Clrscr
-		mov edx,OFFSET mmBannerAdd
-		call WriteString
-		call Crlf
-		jmp	_getAddChoice
+	call Clrscr
+	mov edx, offset txtVoucherAdd
+	call writestring
+	call readint
+	mov voucherCInput, eax
+
+	mov ecx, lengthof vouchers
+	mov esi, 0
+
+	loopArr:
+		mov eax, vouchers[esi]
+		cmp eax, 0
+		je	addVoucher
+		jne	hasValue
+			
+	addVoucher:
+		mov eax, voucherCInput
+		mov vouchers[esi], eax
+		
+		addPrice:
+			mov edx, offset txtVoucherPrice 
+			call writestring
+			call readdec
+			;mov voucherRM[esi], eax
+			mov voucherRMS, eax
+		jmp displayV
+
+	hasValue:
+		add esi, type vouchers
+		loop loopArr
+
+	
+	
+displayV:
+	mov ecx, lengthof vouchers
+	mov esi, 0
+
+	sumVouchers:
+		mov eax, vouchers[esi]
+		call writedec
+		call crlf
+		add esi, type vouchers
+		loop sumVouchers
+
+	call readint
+	mov selectedChoice, eax
+	.if selectedChoice == 1
+		jmp _displayAddItem
+	.else
+		jmp _displayMainMenu
+	.endif	
 
 
 _displayViewItem :
