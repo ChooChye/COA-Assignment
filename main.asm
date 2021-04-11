@@ -122,6 +122,7 @@ INCLUDE Macros.inc
 	txtGrandTotal	byte "Grand Total		:RM ",0
 	txtPay			byte "Enter amount payable	:RM ",0
 	txtBal			byte "Balance			:RM ",0
+	txtDupVoucher	byte "This voucher code already exists",0
 	
 
 	selectedChoice DWORD ?
@@ -1398,8 +1399,8 @@ _displayAddItem :
 	loopArr:
 		mov eax, vouchers[esi]
 		cmp eax, 0
-		je	addVoucher
-		jne	hasValue
+		je	addVoucher				; if the array is 0 then add new voucher
+		jne	hasValue				; If the array is not 0
 			
 	addVoucher:
 		mov eax, voucherCInput
@@ -1413,12 +1414,27 @@ _displayAddItem :
 			mov voucherRMS, eax
 		jmp displayV
 
-	hasValue:
+	hasValue:		
+		;; Check if duplicate
+		checkIfDup:
+			mov eax, vouchers[esi]
+			mov ebx, voucherCInput
+
+			.if ebx == eax
+				mov eax, white+(red*16)
+				call settextcolor
+				mov edx, offset txtDupVoucher
+				call writestring
+				mov eax, white
+				call settextcolor
+				call crlf
+				mov eax, 1000
+				call delay
+				jmp _displayManageStock
+			.endif
 		add esi, type vouchers
 		loop loopArr
 
-	
-	
 displayV:
 	mov ecx, lengthof vouchers
 	mov esi, 0
