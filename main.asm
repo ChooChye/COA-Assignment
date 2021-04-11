@@ -317,7 +317,7 @@ INCLUDE Macros.inc
 	txtMeeGoreng		byte	"Food :          Mee Goreng",0
 	txtChickenRice		byte	"Food :          Chicken Rice",0
 	txtWantanMee		byte	"Food :          Wantan Mee",0
-	priceNasiLemak		byte	"Price :         RM 5.50",0
+	priceNasiLemak		byte	"Price :         RM 6.00",0
 	priceNasiGoreng		byte	"Price :         RM 7.50",0
 	priceMeeGoreng		byte	"Price :         RM 6.50",0
 	priceChickenRice	byte	"Price :         RM 8.00",0
@@ -1616,7 +1616,7 @@ _getViewChoice:
 				mov edx, offset txtProdSST
 				call writestring
 				
-				mov eax, 550			; Formula = 550+[[(550*sstTax)/100]/100]
+				mov eax, 600			; Formula = 600+[[(600*sstTax)/100]/100]
 				jmp _calculateSST
 				
 		.elseif selectedChoiceP1 == 2		; view nasi goreng
@@ -1783,23 +1783,7 @@ _displayUpdateItem:
 
 _getUpdateChoice:
 
-	.if selectedChoiceP1 == 1		; update choice = name
-		call clrscr
-		call Crlf
-		mov eax, white+(cyan*16)
-		call settextcolor
-		mov edx, offset pending
-		call writestring
-		mov eax, white
-		call settextcolor
-	
-		mov eax, 2000
-		call delay
-		jmp _displayUpdateItem
-
-
-
-	.elseif selectedChoiceP1 == 2		; update choice = price
+		.if selectedChoiceP1 == 1		; update choice = price
 			call Clrscr
 			mov edx,OFFSET productBanner
 			call WriteString
@@ -2010,7 +1994,7 @@ _getUpdateChoice:
 
 			.endif
 
-	.elseif selectedChoiceP1 == 3		; update choice = discount price
+	.elseif selectedChoiceP1 == 2		; update choice = discount price
 	
 	
 		call clrscr
@@ -2090,7 +2074,7 @@ _getUpdateChoice:
 
 
 
-	.elseif selectedChoiceP1 == 4			; update choice = profit 
+	.elseif selectedChoiceP1 == 3			; update choice = profit 
 		call Clrscr
 		mov edx,OFFSET productBanner
 		call WriteString
@@ -2238,7 +2222,7 @@ _getUpdateChoice:
 			jmp compareOption
 	
 	
-	.elseif selectedChoiceP1 == 5		; update choice = back
+	.elseif selectedChoiceP1 == 4		; update choice = back
 		jmp _displayManageStock
 
 	.else			; invalid input
