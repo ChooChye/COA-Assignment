@@ -229,17 +229,22 @@ INCLUDE Macros.inc
 					BYTE "5. Wantan Mee		",0dh,0ah
 					BYTE "======================PRODUCT LIST======================", 0dh,0ah,0
 
-	deleteBanner	byte "========================================",0dh,0ah
-					byte "|                                      |",0dh,0ah
-					byte "|            DELETE ITEM               |",0dh,0ah
-					byte "|                                      |",0dh,0ah
-					byte "========================================",0dh,0ah,0
+	deleteBanner	byte "====================================================",0dh,0ah
+					byte "|                                                   |",0dh,0ah
+					byte "|                    DELETE ITEM                    |",0dh,0ah
+					byte "|                                                   |",0dh,0ah
+					byte "====================================================",0dh,0ah,0
+
+	addBanner		byte "====================================================",0dh,0ah
+					byte "|                                                   |",0dh,0ah
+					byte "|                      ADD ITEM                     |",0dh,0ah
+					byte "|                                                   |",0dh,0ah
+					byte "====================================================",0dh,0ah,0
 	
 	
 	viewBanner		BYTE "-----------------------VIEW ITEM-----------------------",0
 	updateBanner	BYTE "-----------------------UPDATE ITEM-----------------------",0
-	addBanner		BYTE "-----------------------ADD ITEM-----------------------",0
-;	deleteBanner	BYTE "-----------------------DELETE ITEM-----------------------",0
+	
 	lineBanner		BYTE "---------------------------------------------------------",0
 
 	viewChoicePL	BYTE "Please select which PRODUCT to proceed or 0 to stop: ", 0
@@ -269,8 +274,6 @@ INCLUDE Macros.inc
 						BYTE	"2. Nasi Goreng	",0dh,0ah
 						BYTE	"3. Mee Goreng		",0dh,0ah
 						BYTE	"4. Chicken Rice	",0dh,0ah
-						BYTE	"5. Wantan Mee		",0dh,0ah
-						BYTE	"6. Ayam Goreng     " ,0dh,0ah
 						BYTE	 "======================PRODUCT LIST======================", 0dh,0ah,0
 
 	updatePrice			BYTE	"Please enter new price : RM ", 0
@@ -1438,37 +1441,16 @@ _displayManageStock :
 _displayAddItem :
 		
 	call Clrscr
+	mov edx, offset addBanner
+	call writestring
+	call crlf
 	mov edx, offset txtVoucherAdd
 	call writestring
 	call readint
 	mov voucherCInput, eax
- 
+
 	mov ecx, lengthof vouchers
 	mov esi, 0
-
-	cmp eax, 5555
-		je _voucherErrorInput
-		jne addPrice
-		
-		_voucherErrorInput:
-			call crlf
-			mov eax, white+(red*16)
-			call settextcolor
-			mov edx, offset voucherExist
-			call WriteString
-			mov eax, white
-			call settextcolor
-			call crlf
-
-			
-			mov edx, offset txtVoucherAdd
-			call writestring
-			call readint
-			mov voucherCInput, eax
-			
-			mov ecx, lengthof vouchers
-			mov esi, 0
-			jmp loopArr
 
 	loopArr:
 		mov eax, vouchers[esi]
@@ -1481,16 +1463,18 @@ _displayAddItem :
 		mov vouchers[esi], eax
 		
 		addPrice:
+			
 			mov edx, offset txtVoucherPrice 
 			call writestring
 			call readdec
-			;mov voucherRM[esi], eax
+			
 			mov voucherRMS, eax
 		jmp displayV
 
 	hasValue:		
 		;; Check if duplicate
 		checkIfDup:
+			call crlf
 			mov eax, vouchers[esi]
 			mov ebx, voucherCInput
 
@@ -1506,6 +1490,7 @@ _displayAddItem :
 				call delay
 				jmp _displayManageStock
 			.endif
+
 		add esi, type vouchers
 		loop loopArr
 
@@ -1528,6 +1513,7 @@ displayV:
 		jmp _displayMainMenu
 	.endif	
 
+
 _displayViewItem :
 		call Clrscr
 		mov edx,OFFSET productBanner
@@ -1542,7 +1528,7 @@ _displayDeleteItem:
 	call writestring
 	call crlf
 	call crlf
-	mov edx, offset updateNameDisplay
+	mov edx, offset productBanner
 	call writestring
 	call crlf
 	call crlf
@@ -1551,7 +1537,7 @@ _displayDeleteItem:
 	call readint
 	mov selectedChoiceP1, eax
 	
-	.if selectedChoiceP1 == 6
+	.if selectedChoiceP1 == 5
 		jmp _displayNewBanner
 	.elseif selectedChoiceP1 == 0
 		jmp _displayManageStock
@@ -1581,7 +1567,7 @@ _displayDeleteItem:
 		call settextcolor
 		call crlf
 		call crlf
-		mov edx, offset productBanner
+		mov edx, offset updateNameDisplay
 		call writeString
 		call crlf
 		
@@ -1682,6 +1668,7 @@ _getAddChoice:
 		.else
 
 			call clrscr
+			call crlf
 			mov edx, offset addBanner
 			call writestring
 			call crlf
@@ -1939,36 +1926,19 @@ _getUpdateChoice:
 
 	.if selectedChoiceP1 == 1		; update choice = name
 		call clrscr
-		mov edx,OFFSET productBanner
-		call WriteString
 		call Crlf
-		call crlf
-		mov edx, offset updateBanner
-		call writestring
-		call crlf
-		call crlf
-		mov	edx, offset updateName
-		mov	ecx,MAX            ;buffer size - 1
-		call writeString
-		call ReadString
-	
-		call Crlf
-		mov eax, white+(green*16)
+		mov eax, white+(cyan*16)
 		call settextcolor
-		mov edx, offset updateNameSuccess
+		mov edx, offset pending
 		call writestring
 		mov eax, white
 		call settextcolor
-		
-		call crlf
-		call crlf
-		mov edx, offset updateNameDisplay
-		call writestring
-		mov edx, offset uchoice
-		call writestring
-		call crlf
-		call crlf
-		jmp compareOption
+	
+		mov eax, 2000
+		call delay
+		jmp _displayUpdateItem
+
+
 
 	.elseif selectedChoiceP1 == 2		; update choice = price
 			call Clrscr
@@ -2343,13 +2313,7 @@ _getUpdateChoice:
 
 	;------update new price base on profit-----	
 		_displayProfit:
-			; call clrscr
-;			mov edx, offset stringPrice
-;			call writestring
-;			mov eax, foodPrices[esi]
-			
-		;	call writedec
-
+		
 			mov	edx, offset lineBanner
 			call Writestring
 			call crlf
