@@ -240,7 +240,7 @@ INCLUDE Macros.inc
 					byte "|                      ADD ITEM                     |",0dh,0ah
 					byte "|                                                   |",0dh,0ah
 					byte "====================================================",0dh,0ah,0
-	txtAddVoucherC	byte "Press 1 to add more vouchers or Press any key to return to Manage Stock Menu",0
+	txtAddVoucherC	byte "Press 1 to add more vouchers | Press any key to return to Manage Stock Menu : ",0
 	
 	
 	viewBanner		BYTE "-----------------------VIEW ITEM-----------------------",0
@@ -289,7 +289,8 @@ INCLUDE Macros.inc
 				byte	"        This function is coming soon...." ,0dh,0ah
 				byte	"----------------------------------------------", 0dh, 0ah, 0
 	
-	
+	vname	byte	"New voucher code : ", 0
+	vprice	byte	"New voucher price : ", 0
 	
 	newVoucherBanner	byte	"Voucher Code : 5555", 0dh, 0ah
 						byte	"Current discount price: RM 5.90" ,0
@@ -1406,39 +1407,6 @@ _displayManageStock :
 		.endif
 
 
-; _displayAddItem :
-		
-;	call Clrscr
-;	mov edx, offset txtVoucherAdd
-;	call writestring
-;	call readint
-;	mov voucherCInput, eax
-
-;	cmp eax, 5555
-;		je _voucherErrorInput
-;		jne addPrice
-;		
-;		_voucherErrorInput:
-;			call crlf
-;			mov eax, white+(red*16)
-;			call settextcolor
-;			mov edx, offset voucherExist
-;			call WriteString
-;			mov eax, white
-;			call settextcolor
-;			call crlf
-
-			
-;			mov edx, offset txtVoucherAdd
-;			call writestring
-;			call readint
-;			mov voucherCInput, eax
-			
-;			mov ecx, lengthof vouchers
-;			mov esi, 0
-;			jmp loopArr
-
-
 _displayAddItem :
 		
 	call Clrscr
@@ -1496,32 +1464,36 @@ _displayAddItem :
 		loop loopArr
 
 displayV:
-	;mov ecx, lengthof vouchers
-	;mov esi, 0
+    call crlf
+	mov eax, white+(cyan*16)
+	call settextcolor
 
-	;sumVouchers:
-		;mov eax, vouchers[esi]
-		;call writedec
-		;call crlf
-		;add esi, type vouchers
-		;loop sumVouchers
+	mov edx, offset vname
+	call writestring
 	mov eax, voucherCInput
 	call writedec
 	call crlf
 
+	mov edx, offset vprice
+	call writestring
 	mov eax, voucherRMS
 	call writedec
 	call crlf
 
+	mov eax, white
+	call settextcolor
+	call crlf
 	mov edx, offset txtAddVoucherC
 	call writestring
 
 	call readint
+	call crlf
 	mov selectedChoice, eax
 	.if selectedChoice == 1
+		call crlf
 		jmp _displayAddItem
 	.else
-		jmp _displayMainMenu
+		jmp _displayManageStock
 	.endif	
 
 
@@ -1615,130 +1587,6 @@ _displayDeleteItem:
 			call Crlf
 			jmp _displayDeleteItem
 
-	
-
-;	call clrscr
-;	mov eax, white+(cyan*16)
-;	call settextcolor
-;	mov edx, offset pending
-;	call writestring
-;	mov eax, white
-;	call settextcolor
-;	call crlf
-;	mov edx, offset txtDelete
-;	call writestring
-;	call readint
-;	mov selectedChoiceP1, eax
-
-;	.if selectedChoiceP1 == 0
-;		jmp _displayManageStock
-;	.elseif selectedChoiceP1 == 99
-;		call clrscr
-;		jmp	_displayMainMenu
-;	.else
-;		mov eax, white+(red*16)
-;		call settextcolor
-;		mov edx, offset invalidOption
-;		call WriteString
-;		mov eax, white
-;		call settextcolor
-;		call Crlf
-;		jmp _displayDeleteItem
-;	.endif
-
-_getAddChoice:
-		
-	
-		mov edx, offset choiceName					;Output Text and receive input from user
-	;	mov  ecx,MAX								;buffer size - 1
-		call WriteString
-		call ReadInt
-		mov mmChoiceAdd, eax
-
-		.if mmChoiceAdd == 1
-			call Clrscr
-			mov eax, white+(red*16)
-			call settextcolor
-	
-			mov edx, offset addErrorText
-			call WriteString
-			mov eax, white
-			call settextcolor
-			call Crlf
-
-			call Crlf
-			mov edx, offset mmBannerAdd
-			call WriteString
-			call Crlf
-			loop _getAddChoice
-		
-		.elseif mmChoiceAdd == 0
-			jmp	_displayManageStock
-		.elseif mmChoiceAdd == 99
-			jmp	_displayMainMenu
-		.else
-
-			call clrscr
-			call crlf
-			mov edx, offset addBanner
-			call writestring
-			call crlf
-			mov	edx, offset updateName
-			mov	ecx,MAX            ;buffer size - 1
-			call writeString
-			call ReadString
-	
-			call Crlf
-			mov eax, white+(green*16)
-			call settextcolor
-			mov edx, offset updateNameSuccess
-			call writestring
-			mov eax, white
-			call settextcolor
-		
-			call crlf
-			call crlf
-			mov edx, offset updateNameDisplay
-			call writestring
-			mov edx, offset uchoice
-			call writestring
-			call crlf
-			call crlf
-			
-			xor al,al					
-			mov edx, offset addOption
-			call WriteString
-			call readchar
-			call writechar
-			mov uchoice, al
-			call Crlf
-			call Crlf
-			jmp compareAddYes
-	
-	;---------------compare yes / no---------------
-			compareAddYes:
-				cmp		uchoice, 'y'
-				je		_displayAddItem		; input == 'y'
-				jne		compareAddNo	; input != 'y'
-
-			compareAddNo:
-				cmp uchoice, 'n'
-				je   _displayManageStock
-				jne	 errorInput2
-					
-			errorInput2:
-				mov edx, offset invalidOption
-				mov eax, white+(red*16)
-				call settextcolor
-	
-				mov edx, offset invalidOption
-				call WriteString
-				mov eax, white
-				call settextcolor
-				call Crlf
-				jmp _displayAddItem
-
-		.endif
 	
 
 
