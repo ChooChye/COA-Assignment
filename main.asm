@@ -257,11 +257,10 @@ INCLUDE Macros.inc
 	txtDelete		byte	"Please enter 0 to back | 99 to return to main menu: ", 0
 
 	addOption		BYTE	"Do you want to continue ADD item?  (y)es or (n)o :  ", 0
-	updateChoice	BYTE "1. Name ", 0dh, 0ah
-					BYTE "2. Food Price ", 0dh, 0ah
-					BYTE "3. Discount price ", 0dh, 0ah
-					BYTE "4. Profit price ", 0dh, 0ah
-					BYTE "5. Back ", 0dh, 0ah
+	updateChoice	BYTE "1. Food Price ", 0dh, 0ah
+					BYTE "2. Discount price ", 0dh, 0ah
+					BYTE "3. Profit price ", 0dh, 0ah
+					BYTE "4. Back ", 0dh, 0ah
 					BYTE "-----------------------UPDATE ITEM-----------------------", 0dh, 0ah
 					BYTE " ",0dh, 0ah
 					BYTE "Please select an option to update : ", 0
@@ -1077,8 +1076,8 @@ _getChoice:
 						.if eax == ebx						
 						mov edx, offset txtDiscount
 						call writestring
-						mov esi, voucherPInput
-						mov eax, voucherRM[esi]
+						mov edi, voucherPInput
+						mov eax, voucherRM[edi]
 						mov voucherRMS, eax
 						mov ebx, percent			; Divisor = 100
 						xor edx, edx            
@@ -1438,6 +1437,7 @@ _displayAddItem :
 			call readdec
 			
 			mov voucherRMS, eax
+			mov voucherRM[esi], eax
 		jmp displayV
 
 	hasValue:		
@@ -1696,7 +1696,39 @@ _getViewChoice:
 
 	.endif
 
+	compareOption:
+					xor al,al					
+					mov edx, offset updateOption
+					call WriteString
+					call readchar
+					call writechar
+					mov uchoice, al
+					call Crlf
+					call Crlf
+					jmp compareYes
 	
+	;---------------compare yes / no---------------
+					compareYes:
+						cmp		uchoice, 'y'
+						je		_displayUpdateItem		; input == 'y'
+						jne		compareNo	; input != 'y'
+
+					compareNo:
+						cmp uchoice, 'n'
+						je   _displayManageStock
+						jne	 errorInput
+					
+					errorInput:
+						mov edx, offset invalidOption
+						mov eax, white+(red*16)
+						call settextcolor
+	
+						mov edx, offset invalidOption
+						call WriteString
+						mov eax, white
+						call settextcolor
+						call Crlf
+						jmp _displayUpdatePrice
 
 	_calculateSST:
 		mov ebx, sstTax              
@@ -1940,44 +1972,12 @@ _getUpdateChoice:
 					call settextcolor
 					call Crlf
 					call Crlf
-					jmp compareOption
+
+					mov eax, 2000
+					call delay
+					jmp _displayManageStock
 				
-				compareOption:
-					xor al,al					
-					mov edx, offset updateOption
-					call WriteString
-					call readchar
-					call writechar
-					mov uchoice, al
-					call Crlf
-					call Crlf
-					jmp compareYes
 	
-	;---------------compare yes / no---------------
-					compareYes:
-						cmp		uchoice, 'y'
-						je		_displayUpdateItem		; input == 'y'
-						jne		compareNo	; input != 'y'
-
-					compareNo:
-						cmp uchoice, 'n'
-						je   _displayManageStock
-						jne	 errorInput
-					
-					errorInput:
-						mov edx, offset invalidOption
-						mov eax, white+(red*16)
-						call settextcolor
-	
-						mov edx, offset invalidOption
-						call WriteString
-						mov eax, white
-						call settextcolor
-						call Crlf
-						jmp _displayUpdatePrice
-
-	
-		
 			.else			; if new price not more than 100
 				call crlf
 				mov eax, white+(red*16)
@@ -1989,7 +1989,10 @@ _getUpdateChoice:
 				call settextcolor
 				call Crlf
 				call Crlf
-				jmp compareOption
+				
+				mov eax, 2000
+				call delay
+				jmp _displayManageStock
 			
 
 			.endif
@@ -2053,7 +2056,11 @@ _getUpdateChoice:
 					call settextcolor
 					call Crlf
 					call Crlf
-					jmp compareOption
+
+					mov eax, 2000
+					call delay
+					jmp _displayManageStock
+				
 				
 			.else			; if new price not more than 100
 				
@@ -2066,13 +2073,13 @@ _getUpdateChoice:
 				call settextcolor
 				call Crlf
 				call Crlf
-				jmp compareOption
+				mov eax, 2000
+				call delay
+				jmp _displayManageStock
+				
 			
 
 			.endif
-	
-
-
 
 	.elseif selectedChoiceP1 == 3			; update choice = profit 
 		call Clrscr
