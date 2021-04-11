@@ -240,6 +240,7 @@ INCLUDE Macros.inc
 					byte "|                      ADD ITEM                     |",0dh,0ah
 					byte "|                                                   |",0dh,0ah
 					byte "====================================================",0dh,0ah,0
+	txtAddVoucherC	byte "Press 1 to add more vouchers or Press any key to return to Manage Stock Menu",0
 	
 	
 	viewBanner		BYTE "-----------------------VIEW ITEM-----------------------",0
@@ -1495,15 +1496,25 @@ _displayAddItem :
 		loop loopArr
 
 displayV:
-	mov ecx, lengthof vouchers
-	mov esi, 0
+	;mov ecx, lengthof vouchers
+	;mov esi, 0
 
-	sumVouchers:
-		mov eax, vouchers[esi]
-		call writedec
-		call crlf
-		add esi, type vouchers
-		loop sumVouchers
+	;sumVouchers:
+		;mov eax, vouchers[esi]
+		;call writedec
+		;call crlf
+		;add esi, type vouchers
+		;loop sumVouchers
+	mov eax, voucherCInput
+	call writedec
+	call crlf
+
+	mov eax, voucherRMS
+	call writedec
+	call crlf
+
+	mov edx, offset txtAddVoucherC
+	call writestring
 
 	call readint
 	mov selectedChoice, eax
