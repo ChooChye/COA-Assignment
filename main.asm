@@ -133,7 +133,7 @@ INCLUDE Macros.inc
 	voucherR			dword 590, 3 dup (?)
 	voucherCInput		dword ?
 	voucherPInput		dword ?
-	txtVoucherPrice		byte "Voucher Price RM ",0
+	txtVoucherPrice		byte "Voucher Price : RM ",0
 
 	sstTax			dword 600
 	sst				dword ?
@@ -228,13 +228,26 @@ INCLUDE Macros.inc
 					BYTE "5. Wantan Mee		",0dh,0ah
 					BYTE "======================PRODUCT LIST======================", 0dh,0ah,0
 
+	deleteBanner	byte "========================================",0dh,0ah
+					byte "|                                      |",0dh,0ah
+					byte "|            DELETE ITEM               |",0dh,0ah
+					byte "|                                      |",0dh,0ah
+					byte "========================================",0dh,0ah,0
+	
+	
 	viewBanner		BYTE "-----------------------VIEW ITEM-----------------------",0
 	updateBanner	BYTE "-----------------------UPDATE ITEM-----------------------",0
-	addBanner	BYTE "-----------------------ADD ITEM-----------------------",0
+	addBanner		BYTE "-----------------------ADD ITEM-----------------------",0
+;	deleteBanner	BYTE "-----------------------DELETE ITEM-----------------------",0
 	lineBanner		BYTE "---------------------------------------------------------",0
 
 	viewChoicePL	BYTE "Please select which PRODUCT to proceed or 0 to stop: ", 0
 	viewOption		BYTE	"Do you want to continue VIEW item?  (y)es or (n)o :  ", 0
+
+	deleteChoice	BYTE	"Please select an option to DELETE | 0 to back | 99 to return to main menu: ", 0
+	deleteStatus	BYTE	"Product deleted...", 0
+	deleteOption	BYTE	"Do you want to continue DELETE item?  (y)es or (n)o :  ", 0
+	txtDelete		byte	"Please enter 0 to back | 99 to return to main menu: ", 0
 
 	addOption		BYTE	"Do you want to continue ADD item?  (y)es or (n)o :  ", 0
 	updateChoice	BYTE "1. Name ", 0dh, 0ah
@@ -243,6 +256,7 @@ INCLUDE Macros.inc
 					BYTE "4. Profit price ", 0dh, 0ah
 					BYTE "5. Back ", 0dh, 0ah
 					BYTE "-----------------------UPDATE ITEM-----------------------", 0dh, 0ah
+					BYTE " ",0dh, 0ah
 					BYTE "Please select an option to update : ", 0
 	
 	updateName			BYTE	"Please enter new name : ", 0
@@ -255,7 +269,8 @@ INCLUDE Macros.inc
 						BYTE	"3. Mee Goreng		",0dh,0ah
 						BYTE	"4. Chicken Rice	",0dh,0ah
 						BYTE	"5. Wantan Mee		",0dh,0ah
-						BYTE	"6. Ayam Goreng ",0
+						BYTE	"6. Ayam Goreng     " ,0dh,0ah
+						BYTE	 "======================PRODUCT LIST======================", 0dh,0ah,0
 
 	updatePrice			BYTE	"Please enter new price : RM ", 0
 	updateNewPrice		DWORD	?
@@ -269,12 +284,13 @@ INCLUDE Macros.inc
 				byte	"        This function is coming soon...." ,0dh,0ah
 				byte	"----------------------------------------------", 0dh, 0ah, 0
 	
-	txtDelete		byte	"Please enter 0 to back | 99 to return to main menu: ", 0
+	
 	
 	newVoucherBanner	byte	"Voucher Code : 5555", 0dh, 0ah
 						byte	"Current discount price: RM 5.90" ,0
 	newVoucherPrice		byte	"New discount price : RM ", 0
 	newPriceValid		byte	"New price must be greater than RM 1.00. Please try again...", 0
+	voucherExist		byte	"This voucher code is existed. Please try again...", 0
 	
 	profit			dword ?
 	stringNewPrice	byte "New price :          RM ",0
@@ -1361,6 +1377,7 @@ _displayManageStock :
 
 
 		.if mmChoiceMenu == 1		; add item
+			
 			JMP _displayAddItem
 		.elseif mmChoiceMenu == 2	; update item
 			JMP _displayUpdateItem
@@ -1384,6 +1401,39 @@ _displayManageStock :
 		.endif
 
 
+; _displayAddItem :
+		
+;	call Clrscr
+;	mov edx, offset txtVoucherAdd
+;	call writestring
+;	call readint
+;	mov voucherCInput, eax
+
+;	cmp eax, 5555
+;		je _voucherErrorInput
+;		jne addPrice
+;		
+;		_voucherErrorInput:
+;			call crlf
+;			mov eax, white+(red*16)
+;			call settextcolor
+;			mov edx, offset voucherExist
+;			call WriteString
+;			mov eax, white
+;			call settextcolor
+;			call crlf
+
+			
+;			mov edx, offset txtVoucherAdd
+;			call writestring
+;			call readint
+;			mov voucherCInput, eax
+			
+;			mov ecx, lengthof vouchers
+;			mov esi, 0
+;			jmp loopArr
+
+
 _displayAddItem :
 		
 	call Clrscr
@@ -1391,9 +1441,33 @@ _displayAddItem :
 	call writestring
 	call readint
 	mov voucherCInput, eax
-
+ 
 	mov ecx, lengthof vouchers
 	mov esi, 0
+
+	cmp eax, 5555
+		je _voucherErrorInput
+		jne addPrice
+		
+		_voucherErrorInput:
+			call crlf
+			mov eax, white+(red*16)
+			call settextcolor
+			mov edx, offset voucherExist
+			call WriteString
+			mov eax, white
+			call settextcolor
+			call crlf
+
+			
+			mov edx, offset txtVoucherAdd
+			call writestring
+			call readint
+			mov voucherCInput, eax
+			
+			mov ecx, lengthof vouchers
+			mov esi, 0
+			jmp loopArr
 
 	loopArr:
 		mov eax, vouchers[esi]
@@ -1438,7 +1512,6 @@ displayV:
 		jmp _displayMainMenu
 	.endif	
 
-
 _displayViewItem :
 		call Clrscr
 		mov edx,OFFSET productBanner
@@ -1447,20 +1520,24 @@ _displayViewItem :
 		jmp _getViewChoice
 
 _displayDeleteItem:
+
 	call clrscr
-	mov eax, white+(cyan*16)
-	call settextcolor
-	mov edx, offset pending
+	mov edx, offset deleteBanner
 	call writestring
-	mov eax, white
-	call settextcolor
 	call crlf
-	mov edx, offset txtDelete
+	call crlf
+	mov edx, offset updateNameDisplay
+	call writestring
+	call crlf
+	call crlf
+	mov edx, offset deleteChoice
 	call writestring
 	call readint
 	mov selectedChoiceP1, eax
-
-	.if selectedChoiceP1 == 0
+	
+	.if selectedChoiceP1 == 6
+		jmp _displayNewBanner
+	.elseif selectedChoiceP1 == 0
 		jmp _displayManageStock
 	.elseif selectedChoiceP1 == 99
 		call clrscr
@@ -1475,6 +1552,86 @@ _displayDeleteItem:
 		call Crlf
 		jmp _displayDeleteItem
 	.endif
+
+	_displayNewBanner:		; after delete item
+		
+		call clrscr
+		
+		mov eax, white+(cyan*16)
+		call settextcolor
+		mov edx, offset deleteStatus
+		call writestring
+		mov eax, white
+		call settextcolor
+		call crlf
+		call crlf
+		mov edx, offset productBanner
+		call writeString
+		call crlf
+		
+		xor al,al					
+		mov edx, offset deleteOption
+		call WriteString
+		call readchar
+		call writechar
+		mov uchoice, al
+		call Crlf
+		call Crlf
+		jmp compareDYes
+	
+	;---------------compare yes / no---------------
+		compareDYes:
+			cmp		uchoice, 'y'
+			je		_displayDeleteItem		; input == 'y'
+			jne		compareDNo	; input != 'y'
+
+		compareDNo:
+			cmp uchoice, 'n'
+			je   _displayManageStock
+			jne	 errorInput3
+					
+		errorInput3:
+			mov edx, offset invalidOption
+			mov eax, white+(red*16)
+			call settextcolor
+	
+			mov edx, offset invalidOption
+			call WriteString
+			mov eax, white
+			call settextcolor
+			call Crlf
+			jmp _displayDeleteItem
+
+	
+
+;	call clrscr
+;	mov eax, white+(cyan*16)
+;	call settextcolor
+;	mov edx, offset pending
+;	call writestring
+;	mov eax, white
+;	call settextcolor
+;	call crlf
+;	mov edx, offset txtDelete
+;	call writestring
+;	call readint
+;	mov selectedChoiceP1, eax
+
+;	.if selectedChoiceP1 == 0
+;		jmp _displayManageStock
+;	.elseif selectedChoiceP1 == 99
+;		call clrscr
+;		jmp	_displayMainMenu
+;	.else
+;		mov eax, white+(red*16)
+;		call settextcolor
+;		mov edx, offset invalidOption
+;		call WriteString
+;		mov eax, white
+;		call settextcolor
+;		call Crlf
+;		jmp _displayDeleteItem
+;	.endif
 
 _getAddChoice:
 		
@@ -1751,10 +1908,7 @@ _getViewChoice:
 _displayUpdateItem:
 
 		call Clrscr
-		mov edx,OFFSET productBanner
-		call WriteString
-		call Crlf
-
+	
 		mov edx,OFFSET updateBanner
 		call WriteString
 		call Crlf
@@ -1762,12 +1916,17 @@ _displayUpdateItem:
 		call WriteString
 		call ReadInt					; read update choice
 		mov selectedChoiceP1, eax
+		
 		jmp _getUpdateChoice
 
 _getUpdateChoice:
 
 	.if selectedChoiceP1 == 1		; update choice = name
 		call clrscr
+		mov edx,OFFSET productBanner
+		call WriteString
+		call Crlf
+		call crlf
 		mov edx, offset updateBanner
 		call writestring
 		call crlf
@@ -1796,7 +1955,10 @@ _getUpdateChoice:
 		jmp compareOption
 
 	.elseif selectedChoiceP1 == 2		; update choice = price
-			
+			call Clrscr
+			mov edx,OFFSET productBanner
+			call WriteString
+			call Crlf
 			call Crlf
 			mov edx, offset viewChoicePL						;Output Text and receive input from user
 			call WriteString
@@ -2021,30 +2183,6 @@ _getUpdateChoice:
 
 		
 
-;		.if updateNewPrice >= 100
-;			call clrscr
-;			mov	edx, offset newVoucherBanner
-;			call writestring
-			call crlf
-;		
-;			mov updateNewPrice, eax
-;			call writestring
-;			call crlf
-;			call crlf
-;			mov	edx, offset updatePriceSuccess
-;			call writestring
-;			call crlf
-;			jmp compareOption
-;		.else			; if new price not more than 100
-		
-;			mov eax, white+(red*16)
-;			call settextcolor
-	
-;			mov edx, offset newPriceValid
-;			call WriteString
-;			mov eax, white
-;			call settextcolor
-;			call Crlf
 			
 		.if updateNewPrice >= 100
 					
@@ -2108,7 +2246,11 @@ _getUpdateChoice:
 
 
 	.elseif selectedChoiceP1 == 4			; update choice = profit 
-
+		call Clrscr
+		mov edx,OFFSET productBanner
+		call WriteString
+		call Crlf
+			
 		call Crlf
 		mov edx, offset viewChoicePL			; choose to proceed
 		call WriteString
@@ -2189,7 +2331,8 @@ _getUpdateChoice:
 ;			mov edx, offset stringPrice
 ;			call writestring
 ;			mov eax, foodPrices[esi]
-;			call writedec
+			
+		;	call writedec
 
 			mov	edx, offset lineBanner
 			call Writestring
@@ -2197,6 +2340,8 @@ _getUpdateChoice:
 			mov edx, offset stringProfit
 			call writestring
 			call readint
+
+					
 			mov ebx, percent
 			mul ebx
 			mov profit, eax				; percentage = profit*100 = profit | 5% = 5 * 100 = 500
@@ -2220,6 +2365,9 @@ _getUpdateChoice:
 			mov foodPrices[esi], eax
 
 			call crlf
+			mov eax, white+(cyan*16)
+			call settextcolor
+
 			mov edx, offset stringNewPrice						;------display new profit price
 			call writestring
 			mov eax, foodPrices[esi]
@@ -2244,6 +2392,10 @@ _getUpdateChoice:
 			call crlf
 			call crlf
 			
+			mov eax, white
+			call settextcolor
+			call Crlf
+
 			jmp compareOption
 	
 	
