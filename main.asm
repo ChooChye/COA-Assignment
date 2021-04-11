@@ -257,11 +257,10 @@ INCLUDE Macros.inc
 	txtDelete		byte	"Please enter 0 to back | 99 to return to main menu: ", 0
 
 	addOption		BYTE	"Do you want to continue ADD item?  (y)es or (n)o :  ", 0
-	updateChoice	BYTE "1. Name ", 0dh, 0ah
-					BYTE "2. Food Price ", 0dh, 0ah
-					BYTE "3. Discount price ", 0dh, 0ah
-					BYTE "4. Profit price ", 0dh, 0ah
-					BYTE "5. Back ", 0dh, 0ah
+	updateChoice	BYTE "1. Food Price ", 0dh, 0ah
+					BYTE "2. Discount price ", 0dh, 0ah
+					BYTE "3. Profit price ", 0dh, 0ah
+					BYTE "4. Back ", 0dh, 0ah
 					BYTE "-----------------------UPDATE ITEM-----------------------", 0dh, 0ah
 					BYTE " ",0dh, 0ah
 					BYTE "Please select an option to update : ", 0
@@ -317,7 +316,7 @@ INCLUDE Macros.inc
 	txtMeeGoreng		byte	"Food :          Mee Goreng",0
 	txtChickenRice		byte	"Food :          Chicken Rice",0
 	txtWantanMee		byte	"Food :          Wantan Mee",0
-	priceNasiLemak		byte	"Price :         RM 6.00",0
+	priceNasiLemak		byte	"Price :         RM 5.50",0
 	priceNasiGoreng		byte	"Price :         RM 7.50",0
 	priceMeeGoreng		byte	"Price :         RM 6.50",0
 	priceChickenRice	byte	"Price :         RM 8.00",0
@@ -1616,7 +1615,7 @@ _getViewChoice:
 				mov edx, offset txtProdSST
 				call writestring
 				
-				mov eax, 600			; Formula = 600+[[(600*sstTax)/100]/100]
+				mov eax, 550			; Formula = 550+[[(550*sstTax)/100]/100]
 				jmp _calculateSST
 				
 		.elseif selectedChoiceP1 == 2		; view nasi goreng
