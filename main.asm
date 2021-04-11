@@ -316,7 +316,7 @@ INCLUDE Macros.inc
 	txtMeeGoreng		byte	"Food :          Mee Goreng",0
 	txtChickenRice		byte	"Food :          Chicken Rice",0
 	txtWantanMee		byte	"Food :          Wantan Mee",0
-	priceNasiLemak		byte	"Price :         RM 6.00",0
+	priceNasiLemak		byte	"Price :         RM 5.50",0
 	priceNasiGoreng		byte	"Price :         RM 7.50",0
 	priceMeeGoreng		byte	"Price :         RM 6.50",0
 	priceChickenRice	byte	"Price :         RM 8.00",0
@@ -1616,7 +1616,7 @@ _getViewChoice:
 				mov edx, offset txtProdSST
 				call writestring
 				
-				mov eax, 600			; Formula = 600+[[(600*sstTax)/100]/100]
+				mov eax, 550			; Formula = 550+[[(550*sstTax)/100]/100]
 				jmp _calculateSST
 				
 		.elseif selectedChoiceP1 == 2		; view nasi goreng
